@@ -1,782 +1,642 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Try Out KSR - Bidang Ekonomi</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        ksr: {
-                            blue: '#0052CC',
-                            darkBlue: '#0747A6',
-                            lightBlue: '#DEEBFF',
-                            accent: '#FFAB00',
-                            grayBg: '#F4F5F7'
-                        }
-                    }
-                }
-            }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Try Out KSR - Bidang Ekonomi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Firebase (Cloud Firestore) - dipakai untuk papan peringkat real-time -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Plus Jakarta Sans','ui-sans-serif','system-ui'] },
+        colors: {
+          navy: { 50:'#eef2f9', 100:'#dbe4f3', 500:'#2a4373', 700:'#1c2e4f', 800:'#152340', 900:'#0f1a2e' },
+          mikro: { DEFAULT:'#f97316', bg:'#fff7ed' },
+          makro: { DEFAULT:'#16a34a', bg:'#f0fdf4' }
         }
-    </script>
-    <style>
-        .no-select {
-            user-select: none;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #999;
-        }
-    </style>
+      }
+    }
+  }
+</script>
+<style>
+  body{ font-family:'Plus Jakarta Sans', ui-sans-serif, system-ui; background:#f4f6fb; }
+  .hidden-view{ display:none !important; }
+  .option-item{ transition: border-color .15s ease, background-color .15s ease, transform .1s ease; }
+  .option-item:active{ transform: scale(0.995); }
+  .nav-cell{ transition: background-color .15s ease, color .15s ease; }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:#c7d0e0; border-radius:8px; }
+  .accordion-body{ max-height:0; overflow:hidden; transition:max-height .25s ease; }
+  .accordion-body.open{ max-height:1200px; }
+  @media print {
+    #view-exam, #view-login, .no-print { display:none !important; }
+  }
+</style>
 </head>
-<body class="bg-ksr-grayBg font-sans text-gray-800 antialiased min-h-screen flex flex-col justify-between">
+<body class="min-h-screen text-slate-800">
 
-    <!-- PAGE 1: LOGIN FORM -->
-    <div id="page-login" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-            <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-ksr-blue rounded-full mb-3 text-2xl font-bold">
-                    KSR
-                </div>
-                <h1 class="text-2xl font-bold text-gray-800">Try Out KSR 2026</h1>
-                <p class="text-sm text-gray-500 font-medium">Kompetisi Sains Ruangguru - Bidang Ekonomi</p>
-            </div>
+<!-- ================= LOGIN VIEW ================= -->
+<section id="view-login" class="min-h-screen flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-navy-900/5 border border-slate-100 p-8">
+    <div class="flex justify-center mb-5">
+      <span class="inline-flex items-center gap-2 bg-navy-50 text-navy-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>
+        Try Out KSR &middot; Bidang Ekonomi
+      </span>
+    </div>
+    <h1 class="text-2xl font-bold text-center text-navy-900">Masuk ruang ujian</h1>
+    <p class="text-sm text-slate-500 text-center mt-2 leading-relaxed">
+      Isi identitas dan kode akses berikut. Ujian terdiri dari 50 soal (30 Mikroekonomi, 20 Makroekonomi)
+      dengan durasi 120 menit. Pastikan koneksi internet stabil sebelum memulai.
+    </p>
 
-            <form id="form-login" onsubmit="startExam(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Nama Lengkap Peserta</label>
-                    <input type="text" id="input-nama" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ksr-blue focus:border-ksr-blue outline-none transition text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Nama Sekolah / Instansi</label>
-                    <input type="text" id="input-sekolah" required placeholder="Contoh: SMA Negeri 1 Jakarta" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ksr-blue focus:border-ksr-blue outline-none transition text-sm">
-                </div>
+    <form id="login-form" class="mt-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Nama peserta</label>
+        <input id="input-nama" type="text" required placeholder="Contoh: Aditya Pratama"
+          class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Nomor peserta / NISN</label>
+        <input id="input-no" type="text" required placeholder="Contoh: 0091234567"
+          class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Kode akses</label>
+        <input id="input-kode" type="password" required placeholder="Masukkan kode akses dari pengawas"
+          class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-navy-500">
+      </div>
+      <p id="login-error" class="text-sm text-red-600 hidden-view"></p>
+      <button type="submit"
+        class="w-full bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl py-3 text-sm transition-colors">
+        Masuk
+      </button>
+    </form>
 
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3.5 text-xs text-blue-800 space-y-1">
-                    <p class="font-bold">Ketentuan Ujian:</p>
-                    <ul class="list-disc list-inside space-y-0.5">
-                        <li><strong>50 Soal Pilihan Ganda</strong> (1–30 Mikro, 31–50 Makro)</li>
-                        <li><strong>Durasi:</strong> 120 Menit</li>
-                        <li><strong>Sistem Nilai:</strong> Benar +4 | Salah -1 | Kosong 0</li>
-                    </ul>
-                </div>
+    <div class="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-400 leading-relaxed">
+      <p>&bull; Benar +4 &nbsp;|&nbsp; Salah -1 &nbsp;|&nbsp; Kosong 0</p>
+      <p>&bull; Skor maksimal +200, skor minimal -50</p>
+      <p>&bull; Ujian akan ter-submit otomatis jika waktu habis</p>
+    </div>
+  </div>
+</section>
 
-                <button type="submit" class="w-full py-3 bg-ksr-blue hover:bg-ksr-darkBlue text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-200">
-                    Mulai Ujian Sekarang
-                </button>
-            </form>
-        </div>
+<!-- ================= EXAM VIEW ================= -->
+<section id="view-exam" class="hidden-view min-h-screen">
+  <header class="bg-navy-900 text-white sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      <div>
+        <p class="font-semibold text-sm sm:text-base">Ekonomi &mdash; Try Out KSR</p>
+        <p id="exam-identity" class="text-xs text-navy-100/70 mt-0.5">Nama Peserta &bull; Paket Try Out A</p>
+      </div>
+      <div class="flex items-center gap-2 bg-white/10 border border-white/15 rounded-xl px-4 py-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span id="timer" class="font-mono font-semibold tabular-nums text-sm sm:text-base">02:00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
+    <!-- LEFT: question panel -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+      <div id="question-panel"></div>
+
+      <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-2">
+        <button id="btn-prev" class="px-4 py-2.5 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed">
+          &larr; Sebelumnya
+        </button>
+        <button id="btn-flag" class="px-4 py-2.5 rounded-xl text-sm font-medium border border-amber-300 text-amber-600 hover:bg-amber-50">
+          Tandai Ragu-ragu
+        </button>
+        <button id="btn-next" class="px-4 py-2.5 rounded-xl text-sm font-medium bg-navy-900 text-white hover:bg-navy-800">
+          Selanjutnya &rarr;
+        </button>
+      </div>
     </div>
 
-    <!-- PAGE 2: EXAM ROOM -->
-    <div id="page-exam" class="hidden min-h-screen flex flex-col justify-between">
-        <!-- Header Bar -->
-        <header class="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div>
-                    <h1 class="text-lg font-bold text-ksr-blue">Try Out KSR - Bidang Ekonomi</h1>
-                    <p class="text-xs text-gray-500"><span id="user-display-name" class="font-semibold text-gray-700"></span> (<span id="user-display-school"></span>)</p>
-                </div>
-                <div class="flex items-center space-x-2 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg text-red-600">
-                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span id="timer-display" class="font-mono text-sm font-bold">120:00</span>
-                </div>
-            </div>
-        </header>
+    <!-- RIGHT: nav grid -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 lg:sticky lg:top-20">
+      <p class="text-sm font-semibold text-navy-900 mb-3">Navigasi Soal</p>
+      <div id="nav-grid" class="grid grid-cols-5 gap-2"></div>
 
-        <!-- Main Body (2 Kolom) -->
-        <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Kolom Kiri: Area Soal -->
-            <section class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between min-h-[500px]">
-                <div>
-                    <div class="flex justify-between items-center border-b pb-3 mb-4">
-                        <span id="question-category" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-blue-100 text-ksr-blue">
-                            Ekonomi Mikro
-                        </span>
-                        <span id="question-number-title" class="text-sm font-bold text-gray-500">
-                            Soal No. 1 dari 50
-                        </span>
-                    </div>
+      <div class="mt-4 space-y-1.5 text-xs text-slate-500">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-slate-200 inline-block"></span> Belum dijawab</div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-blue-600 inline-block"></span> Sudah dijawab</div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-amber-400 inline-block"></span> Ragu-ragu</div>
+      </div>
 
-                    <div id="question-container" class="space-y-4">
-                        <p id="question-text" class="text-gray-800 text-base leading-relaxed font-medium"></p>
-                        <div id="question-svg-container" class="my-4 flex justify-center"></div>
-                    </div>
+      <button id="btn-finish" class="w-full mt-5 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl py-3 text-sm">
+        Selesaikan Ujian
+      </button>
+    </div>
+  </div>
+</section>
 
-                    <div id="options-container" class="mt-6 space-y-2.5"></div>
-                </div>
+<!-- ================= RESULT VIEW ================= -->
+<section id="view-result" class="hidden-view min-h-screen px-4 sm:px-6 py-8">
+  <div class="max-w-6xl mx-auto space-y-6">
 
-                <!-- Bottom Navigation Bar -->
-                <div class="pt-6 mt-6 border-t border-gray-100 flex flex-wrap justify-between items-center gap-3">
-                    <button id="btn-prev" onclick="navigateQuestion(-1)" class="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed">
-                        &larr; Sebelumnya
-                    </button>
-
-                    <button id="btn-doubt" onclick="toggleDoubt()" class="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-sm font-medium transition flex items-center space-x-1.5">
-                        <input type="checkbox" id="checkbox-doubt" class="pointer-events-none">
-                        <span>Tandai Ragu-ragu</span>
-                    </button>
-
-                    <button id="btn-next" onclick="navigateQuestion(1)" class="px-5 py-2 bg-ksr-blue hover:bg-ksr-darkBlue text-white rounded-lg text-sm font-medium transition">
-                        Selanjutnya &rarr;
-                    </button>
-                </div>
-            </section>
-
-            <!-- Kolom Kanan: Navigasi Nomor Soal -->
-            <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col justify-between h-fit">
-                <div>
-                    <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Navigasi Soal</h3>
-                    
-                    <div class="grid grid-cols-3 gap-1 mb-4 text-[11px] text-gray-600">
-                        <div class="flex items-center space-x-1">
-                            <span class="w-3 h-3 bg-gray-200 rounded border border-gray-300"></span>
-                            <span>Belum</span>
-                        </div>
-                        <div class="flex items-center space-x-1">
-                            <span class="w-3 h-3 bg-ksr-blue rounded"></span>
-                            <span>Dijawab</span>
-                        </div>
-                        <div class="flex items-center space-x-1">
-                            <span class="w-3 h-3 bg-amber-400 rounded"></span>
-                            <span>Ragu</span>
-                        </div>
-                    </div>
-
-                    <div id="navigation-grid" class="grid grid-cols-5 gap-2 max-h-[380px] overflow-y-auto pr-1"></div>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <button onclick="confirmFinishExam()" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm shadow transition">
-                        Selesaikan Ujian
-                    </button>
-                </div>
-            </section>
-        </main>
+    <!-- score header card -->
+    <div class="bg-gradient-to-br from-navy-900 to-navy-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div>
+          <p class="text-navy-100/70 text-sm">Skor Kamu</p>
+          <p id="result-score" class="text-5xl font-extrabold mt-1">0</p>
+          <p class="text-navy-100/70 text-sm mt-1">dari skala -50 s/d 200</p>
+        </div>
+        <div class="grid grid-cols-3 gap-4 sm:gap-6 text-center">
+          <div><p id="result-benar" class="text-2xl font-bold text-emerald-300">0</p><p class="text-xs text-navy-100/70 mt-1">Benar</p></div>
+          <div><p id="result-salah" class="text-2xl font-bold text-red-300">0</p><p class="text-xs text-navy-100/70 mt-1">Salah</p></div>
+          <div><p id="result-kosong" class="text-2xl font-bold text-slate-300">0</p><p class="text-xs text-navy-100/70 mt-1">Kosong</p></div>
+        </div>
+        <div class="flex flex-col items-start sm:items-end gap-3">
+          <div class="bg-white/10 border border-white/15 rounded-xl px-4 py-2">
+            <p class="text-xs text-navy-100/70">Peringkat saat ini</p>
+            <p id="result-rank" class="font-semibold">-- / --</p>
+          </div>
+          <button id="btn-download" class="no-print text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/15 rounded-lg px-3 py-2">
+            &darr; Unduh Laporan
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- PAGE 3: POST-EXAM (RESULTS & LEADERBOARD) -->
-    <div id="page-result" class="hidden min-h-screen py-8 px-4 max-w-6xl mx-auto space-y-8">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 text-center space-y-2">
-            <h1 class="text-2xl font-bold text-gray-800">Hasil Try Out KSR - Bidang Ekonomi</h1>
-            <p class="text-sm text-gray-500">Selamat! Anda telah menyelesaikan seluruh rangkaian ujian.</p>
-            <div class="inline-block bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mt-2">
-                <span class="text-xs text-gray-500 uppercase font-bold block">Peserta:</span>
-                <span id="result-user-name" class="text-base font-bold text-ksr-blue"></span> 
-                <span class="text-sm text-gray-600"> - </span>
-                <span id="result-user-school" class="text-sm font-medium text-gray-700"></span>
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- diagnostics -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <p class="font-semibold text-navy-900 mb-4">Diagnosis Kelemahan per Indikator</p>
+
+        <div class="mb-5">
+          <div class="flex justify-between text-sm mb-1.5">
+            <span class="font-medium text-slate-700">Mikroekonomi</span>
+            <span id="pct-mikro-label" class="text-mikro font-semibold">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-mikro-bg rounded-full overflow-hidden">
+            <div id="bar-mikro" class="h-full bg-mikro rounded-full transition-all duration-700" style="width:0%"></div>
+          </div>
+          <p id="detail-mikro" class="text-xs text-slate-400 mt-1">0 dari 30 soal benar</p>
         </div>
 
-        <!-- Metric Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
-                <p class="text-xs font-semibold text-gray-500 uppercase">Skor Total</p>
-                <p id="res-score" class="text-3xl font-extrabold text-ksr-blue mt-1">0</p>
-                <p class="text-[10px] text-gray-400 mt-0.5">Maks (+200) | Min (-50)</p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
-                <p class="text-xs font-semibold text-gray-500 uppercase">Jawaban Benar (+4)</p>
-                <p id="res-correct" class="text-3xl font-extrabold text-emerald-600 mt-1">0</p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
-                <p class="text-xs font-semibold text-gray-500 uppercase">Jawaban Salah (-1)</p>
-                <p id="res-wrong" class="text-3xl font-extrabold text-rose-600 mt-1">0</p>
-            </div>
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
-                <p class="text-xs font-semibold text-gray-500 uppercase">Tidak Dijawab (0)</p>
-                <p id="res-empty" class="text-3xl font-extrabold text-gray-400 mt-1">0</p>
-            </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1.5">
+            <span class="font-medium text-slate-700">Makroekonomi</span>
+            <span id="pct-makro-label" class="text-makro font-semibold">0%</span>
+          </div>
+          <div class="w-full h-2.5 bg-makro-bg rounded-full overflow-hidden">
+            <div id="bar-makro" class="h-full bg-makro rounded-full transition-all duration-700" style="width:0%"></div>
+          </div>
+          <p id="detail-makro" class="text-xs text-slate-400 mt-1">0 dari 20 soal benar</p>
         </div>
+      </div>
 
-        <!-- Diagnostik Penguasaan Materi -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                <svg class="w-5 h-5 text-ksr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                <span>Diagnostik Penguasaan Materi</span>
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-2">
-                    <div class="flex justify-between text-sm font-semibold">
-                        <span class="text-gray-700">Ekonomi Mikro (Soal 1–30)</span>
-                        <span id="micro-pct" class="text-ksr-blue">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-                        <div id="micro-bar" class="bg-ksr-blue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                    <p id="micro-detail" class="text-xs text-gray-500">0 dari 30 soal benar</p>
-                </div>
-
-                <div class="space-y-2">
-                    <div class="flex justify-between text-sm font-semibold">
-                        <span class="text-gray-700">Ekonomi Makro (Soal 31–50)</span>
-                        <span id="macro-pct" class="text-ksr-blue">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-                        <div id="macro-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                    <p id="macro-detail" class="text-xs text-gray-500">0 dari 20 soal benar</p>
-                </div>
-            </div>
+      <!-- leaderboard -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <p class="font-semibold text-navy-900">Papan Peringkat &middot; Real-time</p>
+          <span class="text-[11px] text-slate-400">Firebase Firestore</span>
         </div>
-
-        <!-- Leaderboard Table -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                <span>Papan Peringkat (Leaderboard)</span>
-            </h3>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase font-semibold">
-                            <th class="py-3 px-4">Peringkat</th>
-                            <th class="py-3 px-4">Nama Peserta</th>
-                            <th class="py-3 px-4">Asal Sekolah</th>
-                            <th class="py-3 px-4 text-center">Skor Total</th>
-                            <th class="py-3 px-4 text-center text-emerald-600">Benar</th>
-                            <th class="py-3 px-4 text-center text-rose-600">Salah</th>
-                            <th class="py-3 px-4 text-center text-gray-400">Kosong</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leaderboard-tbody" class="divide-y divide-gray-100"></tbody>
-                </table>
-            </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-slate-400 text-xs border-b border-slate-100">
+                <th class="py-2 pr-2">#</th>
+                <th class="py-2 pr-2">Nama</th>
+                <th class="py-2 pr-2">No. Peserta</th>
+                <th class="py-2 text-right">Skor</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr><td colspan="4" class="py-6 text-center text-slate-400 text-sm">Memuat papan peringkat&hellip;</td></tr>
+            </tbody>
+          </table>
         </div>
-
-        <!-- Review & Pembahasan Soal -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center space-x-2">
-                <svg class="w-5 h-5 text-ksr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                <span>Review & Pembahasan Soal</span>
-            </h3>
-
-            <div id="discussion-container" class="space-y-3"></div>
-        </div>
+      </div>
     </div>
 
-    <!-- MODAL CONFIRMATION -->
-    <div id="modal-finish" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 text-center shadow-xl">
-            <h3 class="text-lg font-bold text-gray-800">Konfirmasi Selesai</h3>
-            <p class="text-sm text-gray-600">Apakah Anda yakin ingin mengakhiri ujian ini? Pastikan seluruh soal telah diperiksa kembali.</p>
-            <div class="flex space-x-3 pt-2">
-                <button onclick="closeModal()" class="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50">Batal</button>
-                <button onclick="finishExam()" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">Ya, Selesaikan</button>
-            </div>
-        </div>
+    <!-- review -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+      <p class="font-semibold text-navy-900 mb-4">Review &amp; Pembahasan Soal (1&ndash;50)</p>
+      <div id="review-list" class="divide-y divide-slate-100"></div>
     </div>
+  </div>
+</section>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        // GENERATE 50 SOAL LENGKAP BERSUMBER DARI DATABASE UJIAN KSR
-        const dummyOptions = [
-            ["A. Pilihan A yang relevan", "B. Pilihan B yang relevan", "C. Pilihan C yang relevan", "D. Pilihan D yang relevan", "E. Pilihan E yang relevan"],
-            ["A. Pernyataan 1, 2, dan 3", "B. Pernyataan 1 dan 3", "C. Pernyataan 2 dan 4", "D. Pernyataan 4 saja", "E. Semua pernyataan benar"],
-            ["A. Mengalami kenaikan", "B. Mengalami penurunan", "C. Tetap tidak berubah", "D. Mencapai titik maksimum", "E. Tidak dapat ditentukan"]
-        ];
+<script>
+/* ======================================================================
+   FIREBASE CONFIG - GANTI dengan konfigurasi proyek Firestore Anda.
+   Buat proyek di https://console.firebase.google.com lalu aktifkan
+   Cloud Firestore, ambil config dari Project Settings > Your apps.
+   ====================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAE7qZ7bLd7LxJnmGgQIEheVjXN4IiUt8U",
+  authDomain: "try-out-ksr.firebaseapp.com",
+  projectId: "try-out-ksr",
+  storageBucket: "try-out-ksr.firebasestorage.app",
+  messagingSenderId: "296051753598",
+  appId: "1:296051753598:web:96e6d441f5722bd5e78e2f",
+  measurementId: "G-PTJ9HSREZD"
+};
+const LEADERBOARD_COLLECTION = "leaderboard_ksr_ekonomi";
 
-        const questionsData = [
-            // MIKROEKONOMI (1-30)
-            {
-                id: 1, category: "Ekonomi Mikro",
-                question: "Perhatikan Kurva Kemungkinan Produksi (PPF) berikut:<br>Berdasarkan grafik di atas, kondisi alokasi sumber daya pada titik A, B, C, dan D yang paling tepat adalah...",
-                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black" stroke-width="1.5"/><line x1="30" y1="120" x2="30" y2="10" stroke="black" stroke-width="1.5"/><path d="M 30,20 Q 120,20 130,120" fill="none" stroke="blue" stroke-width="2"/><circle cx="70" cy="90" r="3" fill="black"/><text x="75" y="90" font-size="10">A (di dalam)</text><circle cx="115" cy="60" r="3" fill="black"/><text x="120" y="60" font-size="10">B</text><circle cx="90" cy="35" r="3" fill="black"/><text x="95" y="35" font-size="10">C</text><circle cx="140" cy="30" r="3" fill="black"/><text x="145" y="30" font-size="10">D (di luar)</text><text x="50" y="140" font-size="9">Barang X (Pertanian)</text><text x="5" y="60" font-size="9" transform="rotate(-90 15,60)">Barang Y (Manufaktur)</text></svg>`,
-                options: [
-                    "A. Titik D menggambarkan kondisi efisiensi alokasi sumber daya tertinggi saat ini.",
-                    "B. Pergerakan dari titik A ke titik B menggambarkan adanya opportunity cost konstan.",
-                    "C. Di titik A, perekonomian mengalami underutilization atau pengangguran sumber daya.",
-                    "D. Titik B lebih disukai daripada titik C karena memproduksi lebih banyak barang Y.",
-                    "E. Titik D dapat dicapai tanpa perlu adanya kemajuan teknologi atau penambahan input."
-                ], answer: 2,
-                explanation: "Titik A terletak di dalam kurva PPF, menunjukkan bahwa sumber daya belum dimanfaatkan secara efisien/penuh (underutilization atau pengangguran sumber daya)."
-            },
-            {
-                id: 2, category: "Ekonomi Mikro",
-                question: "Perhatikan grafik pergeseran keseimbangan pasar kopi berikut:<br>Peristiwa yang paling tepat menggambarkan perubahan titik keseimbangan dari X1 ke X2 adalah...",
-                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black"/><line x1="30" y1="120" x2="30" y2="10" stroke="black"/><line x1="40" y1="110" x2="160" y2="20" stroke="blue" stroke-width="1.5"/><text x="165" y="25" font-size="9">S2</text><line x1="80" y1="110" x2="200" y2="20" stroke="blue" stroke-width="1.5"/><text x="205" y="25" font-size="9">S1</text><line x1="40" y1="20" x2="160" y2="110" stroke="red" stroke-width="1.5"/><text x="165" y="115" font-size="9">D1</text><line x1="80" y1="20" x2="200" y2="110" stroke="red" stroke-width="1.5"/><text x="205" y="115" font-size="9">D2</text><circle cx="140" cy="80" r="3" fill="black"/><text x="145" y="85" font-size="9">X1</text><circle cx="100" cy="50" r="3" fill="black"/><text x="105" y="45" font-size="9">X2</text></svg>`,
-                options: [
-                    "A. Penurunan harga bahan baku bersamaan dengan meningkatnya tren konsumsi kopi.",
-                    "B. Bencana kekeringan di daerah penghasil kopi bersamaan dengan meningkatnya tren konsumsi kopi.",
-                    "C. Pemotongan pajak produksi kopi bersamaan dengan penurunan minat konsumen.",
-                    "D. Kenaikan harga teh (barang substitusi) bersamaan dengan ditemukannya teknologi panen kopi yang lebih efisien.",
-                    "E. Penetapan harga eceran tertinggi oleh pemerintah di bawah harga pasar."
-                ], answer: 1,
-                explanation: "Pergeseran D1 ke D2 ke kanan (kenaikan permintaan akibat tren) dan S1 ke S2 ke kiri (penurunan penawaran akibat bencana kekeringan) memindahkan keseimbangan dari X1 ke X2."
-            },
-            {
-                id: 3, category: "Ekonomi Mikro",
-                question: "Perhatikan struktur kurva biaya produksi jangka pendek berikut:<br>Apabila kurva MC berada di bawah kurva ATC (sebelum berpotongan di Titik X), maka seiring bertambahnya jumlah output, kurva ATC akan...",
-                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black"/><line x1="30" y1="120" x2="30" y2="10" stroke="black"/><path d="M 40,30 Q 100,110 180,20" fill="none" stroke="blue" stroke-width="2"/><text x="185" y="25" font-size="9">ATC</text><path d="M 50,90 Q 90,80 150,15" fill="none" stroke="red" stroke-width="2"/><text x="155" y="20" font-size="9">MC</text><circle cx="100" cy="85" r="3" fill="black"/><text x="80" y="80" font-size="9">Titik X</text></svg>`,
-                options: [
-                    "A. Meningkat (sloping upward)",
-                    "B. Bernilai negatif",
-                    "C. Mencapai titik maksimum",
-                    "D. Menurun (sloping downward)",
-                    "E. Konstan secara horizontal"
-                ], answer: 3,
-                explanation: "Jika MC < ATC, maka setiap tambahan unit output memiliki biaya lebih rendah dari rata-rata sebelumnya, sehingga kurva ATC akan terus menurun."
-            },
-            {
-                id: 4, category: "Ekonomi Mikro",
-                question: "Fungsi permintaan suatu barang ditunjukkan oleh P = 120 - 2Q. Jika harga pasar saat ini adalah P = 40, berapakah nilai koefisien elastisitas harga permintaannya (Ed) dan bagaimana sifat elastisitasnya?",
-                options: ["A. Ed = -0,5 (Inelastis)", "B. Ed = -1,0 (Elastis Uniter)", "C. Ed = -0,25 (Inelastis)", "D. Ed = -2,0 (Elastis)", "E. Ed = -1,5 (Elastis)"],
-                answer: 0,
-                explanation: "Saat P = 40, Q = (120 - 40) / 2 = 40. Turunan dQ/dP = -0,5. Ed = (dQ/dP) * (P/Q) = -0,5 * (40/40) = -0,5 (|Ed| < 1, Inelastis)."
-            },
-            {
-                id: 5, category: "Ekonomi Mikro",
-                question: "Garis anggaran (budget line) seorang konsumen akan bergeser sejajar ke kanan luar apabila...",
-                options: [
-                    "A. Harga barang X dan Y mengalami kenaikan 10% bersamaan.",
-                    "B. Pendapatan nominal konsumen meningkat sementara harga kedua barang tetap.",
-                    "C. Harga barang X naik dan harga barang Y turun secara proporsional.",
-                    "D. Pendapatan nominal konsumen berkurang sebesar 20%.",
-                    "E. Terjadi peningkatan kepuasan marginal (marginal utility) konsumen."
-                ], answer: 1,
-                explanation: "Peningkatan pendapatan nominal memperbesar daya beli konsumen tanpa merubah kemiringan (relatif harga), sehingga menggeser garis anggaran sejajar ke kanan/luar."
-            },
-            {
-                id: 6, category: "Ekonomi Mikro",
-                question: "Konsumen berada dalam kondisi keseimbangan pemaksimuman kepuasan (utility maximization) saat mengonsumsi dua barang X dan Y apabila memenuhi syarat...",
-                options: ["A. MUx = MUy", "B. Px · MUx = Py · MUy", "C. MUx / Px = MUy / Py", "D. MRSxy = Py / Px", "E. TUx = TUy"],
-                answer: 2,
-                explanation: "Keseimbangan konsumen tercapai saat kepuasan marginal per rupiah yang dibelanjakan untuk barang X sama dengan barang Y (MUx / Px = MUy / Py)."
-            },
-            {
-                id: 7, category: "Ekonomi Mikro",
-                question: "Suatu produsen menggunakan input L dan K. Harga per unit L adalah $10 dan harga K adalah $20. Saat ini, MPL = 40 unit dan MPK = 60 unit. Agar produsen meminimalkan biaya produksi untuk tingkat output yang sama, langkah yang harus diambil adalah...",
-                options: [
-                    "A. Menambah penggunaan K dan mengurangi L.",
-                    "B. Menambah penggunaan L dan mengurangi K.",
-                    "C. Mengurangi penggunaan kedua input secara proporsional.",
-                    "D. Menghentikan produksi karena berada pada fase diseconomies of scale.",
-                    "E. Mempertahankan kombinasi input saat ini karena sudah optimal."
-                ], answer: 1,
-                explanation: "MPL / PL = 40/10 = 4; MPK / PK = 60/20 = 3. Karena MPL/PL > MPK/PK, penggunaan input L memberikan produktivitas per dollar lebih tinggi, sehingga produsen harus menambah L dan mengurangi K."
-            },
-            {
-                id: 8, category: "Ekonomi Mikro",
-                question: "Diketahui fungsi biaya total suatu perusahaan adalah TC = 2Q² + 10Q + 50. Berapakah besarnya biaya marginal (MC) saat output diproduksi sebanyak 5 unit?",
-                options: ["A. 30", "B. 50", "C. 20", "D. 15", "E. 150"],
-                answer: 0,
-                explanation: "MC = d(TC)/dQ = 4Q + 10. Untuk Q = 5, MC = 4(5) + 10 = 30."
-            },
-            {
-                id: 9, category: "Ekonomi Mikro",
-                question: "Rian keluar dari pekerjaannya sebagai manajer bank dengan gaji Rp15.000.000/bulan untuk membuka kedai kopi. Dalam bulan pertama, penerimaan total kedai adalah Rp40.000.000, sedangkan biaya operasional sebesar Rp22.000.000. Berapakah laba akuntansi dan laba ekonomi Rian per bulan?",
-                options: [
-                    "A. Laba Akuntansi = Rp18.000.000; Laba Ekonomi = Rp3.000.000",
-                    "B. Laba Akuntansi = Rp18.000.000; Laba Ekonomi = Rp18.000.000",
-                    "C. Laba Akuntansi = Rp3.000.000; Laba Ekonomi = Rp18.000.000",
-                    "D. Laba Akuntansi = Rp40.000.000; Laba Ekonomi = Rp22.000.000",
-                    "E. Laba Akuntansi = Rp22.000.000; Laba Ekonomi = Rp15.000.000"
-                ], answer: 0,
-                explanation: "Laba Akuntansi = TR - Biaya Eksplisit = 40jt - 22jt = Rp18.000.000. Laba Ekonomi = Laba Akuntansi - Biaya Implisit (Gaji dilepas) = 18jt - 15jt = Rp3.000.000."
-            },
-            {
-                id: 10, category: "Ekonomi Mikro",
-                question: "Di dalam Pasar Persaingan Sempurna, sebuah perusahaan yang rasional akan memilih tingkat output pemaksimuman laba di mana...",
-                options: ["A. MR > MC", "B. P = MR = MC", "C. P = ATC minimum", "D. TR = TC", "E. MR = 0"],
-                answer: 1,
-                explanation: "Di pasar persaingan sempurna, harga ditentukan pasar sehingga P = MR. Syarat pemaksimuman laba adalah MR = MC, sehingga P = MR = MC."
-            },
-            {
-                id: 11, category: "Ekonomi Mikro",
-                question: "Perusahaan dalam Pasar Persaingan Sempurna dalam jangka pendek sebaiknya tetap beroperasi meskipun mengalami kerugian, selama harga pasar (P) masih dapat menutup...",
-                options: [
-                    "A. Biaya Total Rata-Rata (ATC)",
-                    "B. Biaya Variabel Rata-Rata (AVC)",
-                    "C. Biaya Tetap Rata-Rata (AFC)",
-                    "D. Biaya Tetap Total (TFC)",
-                    "E. Biaya Implisit"
-                ], answer: 1,
-                explanation: "Perusahaan tetap beroperasi dalam jangka pendek selama P >= AVC karena penerimaan masih mampu menutup biaya variabel dan sebagian biaya tetap."
-            },
-            {
-                id: 12, category: "Ekonomi Mikro",
-                question: "Perbedaan mendasar antara kurva permintaan yang dihadapi perusahaan monopoli dengan perusahaan dalam pasar persaingan sempurna adalah...",
-                options: [
-                    "A. Monopoli menghadapi kurva permintaan elastis sempurna (horizontal).",
-                    "B. Monopoli menghadapi kurva permintaan pasar yang miring ke bawah (downward sloping).",
-                    "C. Monopoli menghadapi kurva permintaan yang vertikal sempurna.",
-                    "D. Perusahaan persaingan sempurna dapat menentukan harga (price maker).",
-                    "E. Kurva Marginal Revenue (MR) monopoli berada di atas kurva permintaannya (P)."
-                ], answer: 1,
-                explanation: "Monopolis adalah satu-satunya penjual di pasar, sehingga menghadapi kurva permintaan pasar yang miring ke bawah (downward sloping)."
-            },
-            {
-                id: 13, category: "Ekonomi Mikro",
-                question: "Jika fungsi permintaan pasar monopoli adalah P = 100 - Q, sehingga MR = 100 - 2Q, dan biaya marginalnya konstan MC = 20, harga jual (P) yang memaksimumkan laba monopoli adalah...",
-                options: ["A. $20", "B. $40", "C. $60", "D. $80", "E. $100"],
-                answer: 2,
-                explanation: "MR = MC => 100 - 2Q = 20 => 2Q = 80 => Q = 40. Masukkan ke fungsi permintaan: P = 100 - 40 = $60."
-            },
-            {
-                id: 14, category: "Ekonomi Mikro",
-                question: "Karakteristik utama yang membedakan Pasar Persaingan Monopolistis dari Pasar Persaingan Sempurna adalah...",
-                options: [
-                    "A. Terdapat hambatan besar untuk masuk ke dalam pasar.",
-                    "B. Produk yang dijual bersifat terdiferensiasi (differentiated product).",
-                    "C. Hanya ada beberapa penjual yang menguasai pasar.",
-                    "D. Perusahaan bertindak sebagai price taker mutlak.",
-                    "E. Informasi di dalam pasar bersifat simetris sempurna."
-                ], answer: 1,
-                explanation: "Pasar persaingan monopolistis memiliki banyak penjual tetapi produknya terdiferensiasi (berbeda corak/merek), berbeda dengan persaingan sempurna yang homogen."
-            },
-            {
-                id: 15, category: "Ekonomi Mikro",
-                question: "Kurva permintaan yang patah (kinked demand curve) dalam model Oligopoli Sweezy menjelaskan fenomena...",
-                options: [
-                    "A. Kolusi terbuka antar produsen untuk menetapkan kuota.",
-                    "B. Ketegaran harga (price rigidity) di pasar oligopoli.",
-                    "C. Perilaku produsen monopoli dalam melakukan diskriminasi harga.",
-                    "D. Keseimbangan jangka panjang persaingan sempurna.",
-                    "E. Efek eksternalitas negatif akibat produksi berlebih."
-                ], answer: 1,
-                explanation: "Model Sweezy menjelaskan bahwa perusahaan oligopoli enggan mengubah harga karena asumsi pesaing akan mengikuti penurunan harga namun mengabaikan kenaikan harga, sehingga tercipta ketegaran harga."
-            },
-            {
-                id: 16, category: "Ekonomi Mikro",
-                question: "Penyebab utama terjadinya kegagalan pasar (market failure) akibat adanya barang publik (public goods) adalah timbulnya masalah...",
-                options: [
-                    "A. Moral hazard dan adverse selection",
-                    "B. Free-rider problem (penumpang gratis)",
-                    "C. Deadweight loss akibat pajak",
-                    "D. Kelebihan penawaran (surplus)",
-                    "E. Eksploitasi tenaga kerja"
-                ], answer: 1,
-                explanation: "Barang publik bersifat non-excludable dan non-rivalrous, memicu masalah free-rider di mana individu menikmati manfaat tanpa membayar, sehingga pasar swasta gagal menyediakannya secara optimal."
-            }
-        ];
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+} catch (e) {
+  console.warn("Firebase belum dikonfigurasi dengan benar:", e);
+}
 
-        // Fill remaining questions to reach 50 (17-30 Mikro, 31-50 Makro)
-        for (let i = 17; i <= 50; i++) {
-            const isMicro = i <= 30;
-            const category = isMicro ? "Ekonomi Mikro" : "Ekonomi Makro";
-            const topic = isMicro ? `Konsep Mikroekonomi Lanjutan #${i}` : `Konsep Makroekonomi Lanjutan #${i}`;
-            
-            questionsData.push({
-                id: i,
-                category: category,
-                question: `[Soal ${i}] Berdasarkan analisis teori ${category.toLowerCase()}, manakah dari pernyataan berikut yang paling tepat mengenai ${topic}?`,
-                options: dummyOptions[(i % 3)],
-                answer: (i % 5),
-                explanation: `Penjelasan analisis teoritis secara komprehensif untuk soal nomor ${i} pada bidang ${category}.`
-            });
-        }
+/* ======================================================================
+   DATA SOAL - 50 soal (30 Mikro, 20 Makro)
+   opts index: 0=A 1=B 2=C 3=D 4=E
+   ====================================================================== */
+const QUESTIONS = [
+{id:1,cat:"Mikro",q:"Perhatikan ilustrasi Kurva Kemungkinan Produksi (PPF) suatu negara yang memproduksi Barang X (hasil pertanian) dan Barang Y (hasil manufaktur). Titik A berada di dalam kurva PPF, titik B dan C berada tepat pada garis kurva, sedangkan titik D berada di luar kurva PPF. Berdasarkan ilustrasi tersebut, kondisi alokasi sumber daya pada titik A, B, C, dan D yang paling tepat adalah...",opts:["Titik D menggambarkan kondisi efisiensi alokasi sumber daya tertinggi saat ini.","Pergerakan dari titik A ke titik B menggambarkan adanya opportunity cost yang konstan.","Di titik A, perekonomian mengalami underutilization atau pengangguran sumber daya.","Titik B lebih disukai daripada titik C karena memproduksi lebih banyak barang Y.","Titik D dapat dicapai tanpa perlu adanya kemajuan teknologi atau penambahan input."],ans:2,exp:"Titik A terletak di dalam kurva PPF, menunjukkan bahwa sumber daya belum dimanfaatkan secara efisien/penuh (underutilization)."},
+{id:2,cat:"Mikro",q:"Perhatikan grafik pergeseran keseimbangan pasar kopi. Kurva permintaan bergeser dari D1 ke D2 (bergeser ke kanan), sementara kurva penawaran bergeser dari S1 ke S2 (bergeser ke kiri), sehingga titik keseimbangan berubah dari X1 ke X2. Peristiwa yang paling tepat menggambarkan perubahan tersebut adalah...",opts:["Penurunan harga bahan baku bersamaan dengan meningkatnya tren konsumsi kopi.","Bencana kekeringan di daerah penghasil kopi bersamaan dengan meningkatnya tren konsumsi kopi.","Pemotongan pajak produksi kopi bersamaan dengan penurunan minat konsumen.","Kenaikan harga teh (barang substitusi) bersamaan dengan ditemukannya teknologi panen kopi yang lebih efisien.","Penetapan harga eceran tertinggi oleh pemerintah di bawah harga pasar."],ans:1,exp:"Pergeseran permintaan D1&rarr;D2 ke kanan terjadi karena tren konsumsi kopi meningkat, sedangkan pergeseran penawaran S1&rarr;S2 ke kiri terjadi karena bencana kekeringan mengurangi hasil panen kopi."},
+{id:3,cat:"Mikro",q:"Perhatikan kurva biaya produksi jangka pendek suatu perusahaan. Kurva Biaya Marginal (MC) berpotongan dengan kurva Biaya Total Rata-Rata (ATC) tepat di Titik X, yaitu pada tingkat output Q optimal. Apabila kurva MC berada di bawah kurva ATC (sebelum berpotongan di Titik X), maka seiring bertambahnya jumlah output, kurva ATC akan...",opts:["Meningkat (sloping upward)","Bernilai negatif","Mencapai titik maksimum","Menurun (sloping downward)","Konstan secara horizontal"],ans:3,exp:"Selama MC berada di bawah ATC, setiap tambahan unit output memiliki biaya lebih rendah dari rata-rata sebelumnya, sehingga menarik ATC terus menurun."},
+{id:4,cat:"Mikro",q:"Fungsi permintaan suatu barang ditunjukkan oleh P = 120 &minus; 2Q. Jika harga pasar saat ini adalah P = 40, berapakah nilai koefisien elastisitas harga permintaannya (Ed) dan bagaimana sifat elastisitasnya?",opts:["Ed = &minus;0,5 (Inelastis)","Ed = &minus;1,0 (Elastis Uniter)","Ed = &minus;0,25 (Inelastis)","Ed = &minus;2,0 (Elastis)","Ed = &minus;1,5 (Elastis)"],ans:0,exp:"Pada P = 40, Q = 40. Ed = (dQ/dP) &times; (P/Q) = (&minus;0,5) &times; (40/40) = &minus;0,5, sehingga permintaan bersifat inelastis."},
+{id:5,cat:"Mikro",q:"Garis anggaran (budget line) seorang konsumen akan bergeser sejajar ke kanan (luar) apabila...",opts:["Harga barang X dan Y mengalami kenaikan 10% secara bersamaan.","Pendapatan nominal konsumen meningkat sementara harga kedua barang tetap.","Harga barang X naik dan harga barang Y turun secara proporsional.","Pendapatan nominal konsumen berkurang sebesar 20%.","Terjadi peningkatan kepuasan marginal (marginal utility) konsumen."],ans:1,exp:"Kenaikan pendapatan nominal (dengan harga tetap) memperbesar daya beli konsumen, sehingga garis anggaran bergeser sejajar ke luar (kanan)."},
+{id:6,cat:"Mikro",q:"Konsumen berada dalam kondisi keseimbangan pemaksimuman kepuasan (utility maximization) saat mengonsumsi dua barang X dan Y apabila memenuhi syarat...",opts:["MUx = MUy","Px &middot; MUx = Py &middot; MUy","MUx/Px = MUy/Py","MRSxy = Py/Px","TUx = TUy"],ans:2,exp:"Keseimbangan konsumen tercapai saat kepuasan marginal per rupiah dari barang X sama dengan barang Y, yaitu MUx/Px = MUy/Py."},
+{id:7,cat:"Mikro",q:"Suatu produsen menggunakan input tenaga kerja (L) dan modal (K). Harga per unit L adalah $10 dan harga per unit K adalah $20. Saat ini, produk marginal tenaga kerja (MPL) adalah 40 unit dan produk marginal modal (MPK) adalah 60 unit. Agar produsen dapat meminimalkan biaya produksi untuk tingkat output yang sama, langkah yang harus diambil adalah...",opts:["Menambah penggunaan K dan mengurangi L.","Menambah penggunaan L dan mengurangi K.","Mengurangi penggunaan kedua input secara proporsional.","Menghentikan produksi karena berada pada fase diseconomies of scale.","Mempertahankan kombinasi input saat ini karena sudah optimal."],ans:1,exp:"MPL/PL = 40/10 = 4, sedangkan MPK/PK = 60/20 = 3. Karena MPL/PL &gt; MPK/PK, produsen sebaiknya menambah L dan mengurangi K agar biaya minimum tercapai."},
+{id:8,cat:"Mikro",q:"Diketahui fungsi biaya total suatu perusahaan adalah TC = 2Q&sup2; + 10Q + 50. Berapakah besarnya biaya marginal (MC) saat output diproduksi sebanyak 5 unit?",opts:["30","50","20","15","150"],ans:0,exp:"MC = d(TC)/dQ = 4Q + 10. Untuk Q = 5, MC = 4(5) + 10 = 30."},
+{id:9,cat:"Mikro",q:"Rian keluar dari pekerjaannya sebagai manajer bank dengan gaji Rp15.000.000/bulan untuk membuka kedai kopi. Pada bulan pertama, penerimaan total kedai adalah Rp40.000.000, sedangkan biaya operasional (sewa, bahan baku, gaji karyawan) sebesar Rp22.000.000. Berapakah laba akuntansi dan laba ekonomi Rian per bulan?",opts:["Laba Akuntansi = Rp18.000.000; Laba Ekonomi = Rp3.000.000","Laba Akuntansi = Rp18.000.000; Laba Ekonomi = Rp18.000.000","Laba Akuntansi = Rp3.000.000; Laba Ekonomi = Rp18.000.000","Laba Akuntansi = Rp40.000.000; Laba Ekonomi = Rp22.000.000","Laba Akuntansi = Rp22.000.000; Laba Ekonomi = Rp15.000.000"],ans:0,exp:"Laba Akuntansi = TR &minus; Biaya Eksplisit = 40 &minus; 22 = Rp18 juta. Laba Ekonomi = Laba Akuntansi &minus; Biaya Implisit (gaji yang dilepas) = 18 &minus; 15 = Rp3 juta."},
+{id:10,cat:"Mikro",q:"Di dalam Pasar Persaingan Sempurna, sebuah perusahaan yang rasional akan memilih tingkat output pemaksimuman laba di mana...",opts:["P = MR &gt; MC","P = MR = MC","P = ATC minimum","TR = TC","MR = 0"],ans:1,exp:"Syarat pemaksimuman laba pasar persaingan sempurna adalah P = MR = MC."},
+{id:11,cat:"Mikro",q:"Perusahaan dalam Pasar Persaingan Sempurna pada jangka pendek sebaiknya tetap beroperasi meskipun mengalami kerugian, selama harga pasar (P) masih dapat menutup...",opts:["Biaya Total Rata-Rata (ATC)","Biaya Variabel Rata-Rata (AVC)","Biaya Tetap Rata-Rata (AFC)","Biaya Tetap Total (TFC)","Biaya Implisit"],ans:1,exp:"Perusahaan tetap beroperasi dalam jangka pendek selama P &ge; AVC, karena masih dapat menutup sebagian atau seluruh biaya variabel."},
+{id:12,cat:"Mikro",q:"Perbedaan mendasar antara kurva permintaan yang dihadapi perusahaan monopoli dengan perusahaan dalam pasar persaingan sempurna adalah...",opts:["Monopoli menghadapi kurva permintaan elastis sempurna (horizontal).","Monopoli menghadapi kurva permintaan pasar yang miring ke bawah (downward sloping).","Monopoli menghadapi kurva permintaan yang vertikal sempurna.","Perusahaan persaingan sempurna dapat menentukan harga (price maker).","Kurva Marginal Revenue (MR) monopoli berada di atas kurva permintaannya (P)."],ans:1,exp:"Monopolis adalah satu-satunya penjual di pasar sehingga menghadapi seluruh kurva permintaan pasar yang miring ke bawah (downward sloping)."},
+{id:13,cat:"Mikro",q:"Jika fungsi permintaan pasar monopoli adalah P = 100 &minus; Q, sehingga MR = 100 &minus; 2Q, dan biaya marginalnya konstan MC = 20, harga jual (P) yang memaksimumkan laba monopoli adalah...",opts:["$20","$40","$60","$80","$100"],ans:2,exp:"MR = MC &rarr; 100 &minus; 2Q = 20 &rarr; Q = 40. P = 100 &minus; 40 = $60."},
+{id:14,cat:"Mikro",q:"Karakteristik utama yang membedakan Pasar Persaingan Monopolistis dari Pasar Persaingan Sempurna adalah...",opts:["Adanya hambatan masuk pasar yang sangat tinggi (barriers to entry).","Jumlah penjual yang hanya terdiri dari sedikit perusahaan dominan.","Produk yang diperjualbelikan terdiferensiasi (differentiated products).","Penjual bertindak sebagai price taker.","Dalam jangka panjang dapat memperoleh laba supernormal."],ans:2,exp:"Ciri khas utama persaingan monopolistis adalah produk yang beragam/terdiferensiasi antarprodusen."},
+{id:15,cat:"Mikro",q:"Fenomena ketegaran harga (price rigidity) pada pasar oligopoli dijelaskan oleh model...",opts:["Cournot Duopoly Model","Bertrand Price Competition","Kinked Demand Curve Model (Sweezy)","Stackelberg Leader-Follower","Chamberlin Monopolistic Model"],ans:2,exp:"Kurva permintaan patah (Kinked Demand Curve) menjelaskan mengapa harga cenderung kaku/tegar di pasar oligopoli."},
+{id:16,cat:"Mikro",q:"Eksternalitas negatif dalam produksi (seperti pencemaran limbah pabrik) mengakibatkan timbulnya kelemahan pasar berupa...",opts:["Output yang diproduksi pasar lebih sedikit dari tingkat optimal sosial.","Biaya Sosial Marginal (SMC) lebih tinggi dari Biaya Swasta Marginal (PMC).","Biaya Swasta Marginal (PMC) lebih tinggi dari Biaya Sosial Marginal (SMC).","Produsen menanggung seluruh dampak biaya eksternal secara otomatis.","Terjadinya kelebihan penawaran barang publik."],ans:1,exp:"Eksternalitas negatif produksi menimbulkan biaya eksternal, sehingga SMC = PMC + Biaya Eksternal &gt; PMC."},
+{id:17,cat:"Mikro",q:"Pemerintah dapat menginternalisasi eksternalitas negatif produksi dengan cara...",opts:["Memberikan subsidi per unit output kepada produsen.","Mengenakan pajak Pigouvian (Pigouvian tax) sebesar biaya eksternal marginal.","Menetapkan batas harga minimum (price floor).","Menurunkan tarif pajak korporasi.","Menghapuskan hak milik swasta (property rights)."],ans:1,exp:"Pajak Pigouvian dikenakan sebesar nilai eksternalitas negatif agar biaya swasta mencerminkan biaya sosial yang sesungguhnya."},
+{id:18,cat:"Mikro",q:"Barang publik murni (pure public goods) memiliki dua karakteristik utama, yaitu...",opts:["Rival dan Excludable","Non-rival dan Non-excludable","Rival dan Non-excludable","Non-rival dan Excludable","Memiliki eksternalitas negatif saja"],ans:1,exp:"Barang publik murni bersifat tidak bersaing dalam konsumsi (non-rival) dan tidak dapat dikecualikan penggunaannya (non-excludable)."},
+{id:19,cat:"Mikro",q:"Kondisi di mana salah satu pihak dalam transaksi memiliki informasi yang lebih lengkap dibanding pihak lain sebelum kontrak dibuat (seperti pasar mobil bekas bermutu rendah) dinamakan fenomena...",opts:["Moral Hazard","Adverse Selection","Free Rider Problem","Deadweight Loss","Principal-Agent Problem"],ans:1,exp:"Informasi asimetris yang terjadi sebelum transaksi menyebabkan masalah adverse selection (pilihan yang merugikan)."},
+{id:20,cat:"Mikro",q:"Kebijakan batas harga maksimum (price ceiling) yang ditetapkan pemerintah di bawah harga keseimbangan pasar akan mengakibatkan...",opts:["Kelebihan penawaran (surplus)","Kelebihan permintaan (shortage)","Kenaikan harga barang secara drastis","Pergeseran kurva penawaran ke kanan","Hilangnya surplus konsumen secara keseluruhan"],ans:1,exp:"Batas harga maksimum di bawah keseimbangan membuat kuantitas yang diminta melebihi kuantitas yang ditawarkan (shortage)."},
+{id:21,cat:"Mikro",q:"Pemerintah menetapkan Upah Minimum Provinsi (UMP) di atas upah keseimbangan pasar tenaga kerja. Dampak langsung dari kebijakan tersebut adalah...",opts:["Kekurangan tenaga kerja (shortage of labor)","Kenaikan tingkat penyerapan tenaga kerja oleh perusahaan","Kelebihan penawaran tenaga kerja / Pengangguran (surplus of labor)","Bergesernya kurva permintaan tenaga kerja ke kanan","Penurunan penawaran tenaga kerja terdidik"],ans:2,exp:"UMP di atas upah keseimbangan menyebabkan penawaran tenaga kerja lebih besar dibanding permintaan tenaga kerja, sehingga timbul pengangguran (surplus tenaga kerja)."},
+{id:22,cat:"Mikro",q:"Jika pemerintah mengenakan pajak penjualan atas barang yang memiliki permintaan sangat inelastis (Ed &lt; 1) dan penawaran yang elastis (Es &gt; 1), maka beban pajak sebagian besar ditanggung oleh...",opts:["Produsen/Penjual","Konsumen/Pembeli","Pemerintah","Ditanggung seimbang 50%-50%","Distributor grosir"],ans:1,exp:"Ketika permintaan sangat inelastis dibanding penawaran, pembeli tidak banyak mengurangi konsumsi walau harga naik, sehingga menanggung sebagian besar beban pajak."},
+{id:23,cat:"Mikro",q:"Kurva permintaan perusahaan terhadap faktor produksi tenaga kerja ditentukan oleh...",opts:["Biaya Tetap Rata-Rata (AFC)","Nilai Produk Marginal Tenaga Kerja (VMPL = MPL &times; P)","Suku Bunga Bank Sentral","Jumlah Pengangguran Terbuka","Elastisitas Penawaran Barang"],ans:1,exp:"Kurva permintaan tenaga kerja oleh perusahaan diturunkan dari nilai produk marginal tenaga kerja (VMPL)."},
+{id:24,cat:"Mikro",q:"Hilangnya nilai efisiensi total (surplus konsumen + surplus produsen) akibat adanya distorsi pasar seperti pajak atau penetapan kuota disebut...",opts:["Opportunity Cost","Deadweight Loss","Marginal Cost","Sunk Cost","External Cost"],ans:1,exp:"Hilangnya surplus total masyarakat akibat kegagalan atau distorsi pasar disebut kerugian bobot mati (deadweight loss)."},
+{id:25,cat:"Mikro",q:"Garis yang menghubungkan titik-titik kombinasi input L dan K termurah (least cost combination) untuk berbagai tingkat output dinamakan...",opts:["Kurva Engel","Expansion Path (Jalur Ekspansi)","Price Consumption Curve","Income Consumption Curve","Kurva Lorenz"],ans:1,exp:"Expansion path adalah jalur ekspansi yang menghubungkan titik-titik kombinasi input termurah untuk berbagai tingkat output."},
+{id:26,cat:"Mikro",q:"Apabila kenaikan pendapatan konsumen justru menyebabkan penurunan jumlah pembelian terhadap barang Z, maka Barang Z dikategorikan sebagai...",opts:["Barang Mewah (Luxury Good)","Barang Komplementer","Barang Inferior","Barang Publik","Barang Giffen"],ans:2,exp:"Barang yang konsumsinya berkurang saat pendapatan naik disebut barang inferior."},
+{id:27,cat:"Mikro",q:"Diketahui fungsi permintaan P = 100 &minus; 2Q. Jika harga pasar yang berlaku adalah P = 60 (Q = 20), besarnya surplus konsumen adalah...",opts:["$800","$400","$600","$200","$1.200"],ans:1,exp:"Surplus Konsumen = &frac12; &times; (Harga Maksimum &minus; P) &times; Q = &frac12; &times; (100 &minus; 60) &times; 20 = $400."},
+{id:28,cat:"Mikro",q:"Ketika harga barang X naik, konsumen mengurangi konsumsi barang X dan beralih membeli barang Y yang harganya relatif lebih murah. Respons konsumen ini didasari oleh...",opts:["Efek Pendapatan (Income Effect)","Efek Substitusi (Substitution Effect)","Efek Gengsi (Snob Effect)","Efek Jaringan (Network Effect)","Efek Sisa (Residual Effect)"],ans:1,exp:"Perubahan konsumsi akibat perubahan harga relatif antarbarang disebut efek substitusi."},
+{id:29,cat:"Mikro",q:"Hukum Hasil Lebih yang Makin Menurun (The Law of Diminishing Returns) mulai berlaku dalam produksi jangka pendek pada saat...",opts:["Produk Total (TP) mencapai nilai maksimum.","Produk Rata-Rata (AP) mulai meningkat.","Produk Marginal (MP) mencapai titik maksimum dan mulai menurun.","Biaya Marginal (MC) bernilai nol.","Biaya Tetap Total (TFC) menurun."],ans:2,exp:"Hukum diminishing returns mulai berlaku tepat ketika produk marginal (MP) mencapai titik puncaknya dan mulai menurun."},
+{id:30,cat:"Mikro",q:"Bentuk diskriminasi harga di mana penjual mengenakan harga yang berbeda untuk setiap unit barang yang dijual kepada konsumen sesuai dengan kerelaan membayar maksimum masing-masing konsumen disebut...",opts:["Diskriminasi Harga Tingkat Pertama (First-degree)","Diskriminasi Harga Tingkat Kedua (Second-degree)","Diskriminasi Harga Tingkat Ketiga (Third-degree)","Diskriminasi Harga Wilayah","Peak-Load Pricing"],ans:0,exp:"Mengenakan harga sesuai kerelaan membayar (willingness to pay) individu adalah diskriminasi harga tingkat pertama."},
+{id:31,cat:"Makro",q:"Suatu negara mencatat PDB Nominal tahun 2025 sebesar Rp1.500 triliun. Jika GDP Deflator tahun tersebut adalah 125 (tahun dasar = 100), berapakah besarnya PDB Riil negara tersebut?",opts:["Rp1.200 triliun","Rp1.875 triliun","Rp1.000 triliun","Rp1.375 triliun","Rp1.500 triliun"],ans:0,exp:"PDB Riil = (PDB Nominal / GDP Deflator) &times; 100 = (1.500 / 125) &times; 100 = Rp1.200 triliun."},
+{id:32,cat:"Makro",q:"Komponen pendapatan nasional yang dihitung dari Produk Nasional Bruto (PNB/GNP) dikurangi dengan penyusutan (depreciation) barang modal dinamakan...",opts:["Produk Domestik Bruto (PDB)","Produk Nasional Bersih (NNP)","Pendapatan Nasional Bersih (NNI)","Pendapatan Perseorangan (PI)","Pendapatan Bebas (Disposable Income)"],ans:1,exp:"NNP (Produk Nasional Bersih) = GNP &minus; Penyusutan."},
+{id:33,cat:"Makro",q:"Dalam analisis distribusi pendapatan nasional, apabila nilai Koefisien Gini suatu negara bergerak mendekati angka 0, hal ini mengindikasikan bahwa...",opts:["Tingkat ketimpangan distribusi pendapatan semakin tinggi.","Distribusi pendapatan nasional semakin merata di antara penduduk.","Pendapatan nasional hanya dikuasai oleh 10% kelompok teratas.","Perekonomian mengalami krisis stagflasi.","Rasio beban ketergantungan penduduk meningkat."],ans:1,exp:"Koefisien Gini yang mendekati 0 mengindikasikan tingkat pemerataan pendapatan yang semakin sempurna."},
+{id:34,cat:"Makro",q:"Suatu negara memiliki populasi usia kerja sebanyak 100 juta jiwa. Dari jumlah tersebut, 60 juta jiwa bekerja dan 10 juta jiwa menganggur secara terbuka. Berapakah Tingkat Partisipasi Angkatan Kerja (TPAK) negara tersebut?",opts:["60%","70%","14,28%","10%","50%"],ans:1,exp:"Angkatan Kerja = Bekerja + Menganggur = 60 + 10 = 70 juta. TPAK = (70/100) &times; 100% = 70%."},
+{id:35,cat:"Makro",q:"Seorang pekerja berhenti dari pekerjaan lamanya dan membutuhkan waktu 1 bulan untuk mendapatkan pekerjaan baru yang sesuai dengan keterampilannya. Jenis pengangguran ini dikategorikan sebagai...",opts:["Pengangguran Struktural","Pengangguran Siklis (Cyclical)","Pengangguran Friksional","Pengangguran Musiman","Pengangguran Terselubung"],ans:2,exp:"Jeda waktu mencari pekerjaan baru yang sesuai keterampilan dinamakan pengangguran friksional."},
+{id:36,cat:"Makro",q:"Indeks Harga Konsumen (IHK) pada tahun 2024 dicatat sebesar 110 dan IHK pada tahun 2025 meningkat menjadi 121. Laju inflasi yang terjadi pada tahun 2025 adalah sebesar...",opts:["11%","10%","21%","9,09%","12%"],ans:1,exp:"Inflasi = [(121 &minus; 110) / 110] &times; 100% = (11/110) &times; 100% = 10%."},
+{id:37,cat:"Makro",q:"Apabila terjadi kenaikan harga bahan baku impor secara drastis (supply shock) yang menyebabkan biaya produksi nasional membengkak, inflasi yang timbul dikategorikan sebagai...",opts:["Demand-Pull Inflation","Cost-Push Inflation","Hyperinflation","Demand-Deflation","Expected Inflation"],ans:1,exp:"Kenaikan biaya produksi (misalnya akibat kenaikan harga bahan baku impor) menyebabkan cost-push inflation."},
+{id:38,cat:"Makro",q:"Dalam kondisi perekonomian mengalami resesi, Bank Sentral dapat menerapkan kebijakan moneter ekspansif (easy money policy) dengan langkah...",opts:["Menaikkan suku bunga acuan (discount rate).","Menjual Surat Berharga Negara (SBN) di pasar terbuka.","Menurunkan rasio cadangan kas wajib minimum (reserve requirement).","Memperketat persyaratan penyaluran kredit perbankan.","Menetapkan plafon kredit maksimum bagi sektor swasta."],ans:2,exp:"Menurunkan rasio cadangan wajib kas menambah kemampuan bank menciptakan kredit, sehingga bersifat ekspansif."},
+{id:39,cat:"Makro",q:"Apabila Bank Indonesia memutuskan untuk menjual Sertifikat Bank Indonesia (SBI) kepada bank-bank umum, dampak langsung yang terjadi pada kondisi likuiditas pasar uang adalah...",opts:["Jumlah uang beredar (M1) bertambah, suku bunga turun.","Jumlah uang beredar (M1) berkurang, suku bunga naik.","Cadangan likuiditas bank umum bertambah pesat.","Tingkat inflasi meroket tinggi secara spontan.","Nilai tukar rupiah menguat tajam secara mendadak."],ans:1,exp:"Penjualan SBI menyerap uang tunai dari bank umum, sehingga jumlah uang beredar (M1) berkurang dan suku bunga cenderung naik."},
+{id:40,cat:"Makro",q:"Untuk mengendalikan laju inflasi yang terlalu tinggi (overheating economy), pemerintah dapat mengambil tindakan kebijakan fiskal kontraksional berupa...",opts:["Meningkatkan belanja pemerintah (G) dan menurunkan tarif pajak (T).","Menurunkan belanja pemerintah (G) dan menaikkan tarif pajak (T).","Memperbesar defisit anggaran operasional APBN.","Memberikan subsidi langsung yang lebih meluas kepada produsen.","Mengisikan dana cadangan pemerintah ke sektor industri ekstraktif."],ans:1,exp:"Kebijakan fiskal kontraksional untuk meredam inflasi dilakukan dengan menurunkan belanja pemerintah (G) dan menaikkan pajak (T)."},
+{id:41,cat:"Makro",q:"Dalam perekonomian tertutup sederhana tanpa peran pemerintah, jika nilai Marginal Propensity to Consume (MPC) masyarakat adalah 0,8, maka besarnya angka pengali investasi (investment multiplier) adalah...",opts:["2","4","5","10","0,2"],ans:2,exp:"Angka Pengali Investasi k = 1/(1&minus;MPC) = 1/(1&minus;0,8) = 1/0,2 = 5."},
+{id:42,cat:"Makro",q:"Berdasarkan Teori Kurva Phillips Jangka Pendek, terdapat hubungan timbal balik (trade-off) negatif antara dua indikator makro utama, yaitu...",opts:["Suku bunga dan tingkat investasi","Tingkat inflasi dan tingkat pengangguran","Pertumbuhan ekonomi dan jumlah penduduk","PDB Nominal dan PDB Riil","Ekspor neto dan nilai tukar mata uang"],ans:1,exp:"Kurva Phillips menggambarkan hubungan terbalik (trade-off) antara tingkat inflasi dan tingkat pengangguran dalam jangka pendek."},
+{id:43,cat:"Makro",q:"Dalam Model Pertumbuhan Ekonomi Solow, faktor kunci pendorong utama pertumbuhan output per pekerja secara berkelanjutan dalam jangka panjang (steady state) adalah...",opts:["Kenaikan rasio tabungan nasional","Kemajuan teknologi (technological progress)","Penambahan jumlah uang beredar","Depresiasi modal fisik yang cepat","Pembentukan dana cadangan fiskal"],ans:1,exp:"Dalam Solow Growth Model, pertumbuhan output per pekerja yang berkelanjutan dalam jangka panjang hanya dapat dipicu oleh kemajuan teknologi."},
+{id:44,cat:"Makro",q:"Negara A memproduksi 1 unit beras dalam 2 jam kerja dan 1 unit pakaian dalam 4 jam kerja. Negara B memproduksi 1 unit beras dalam 6 jam kerja dan 1 unit pakaian dalam 3 jam kerja. Pernyataan yang tepat berdasarkan Teori Keunggulan Komparatif adalah...",opts:["Negara A memiliki keunggulan komparatif pada produk pakaian.","Negara B memiliki keunggulan komparatif pada produk beras.","Negara A sebaiknya melakukan spesialisasi dan mengekspor beras.","Perdagangan internasional tidak memberi keuntungan bagi kedua negara.","Negara B memiliki keunggulan absolut pada kedua produk."],ans:2,exp:"Biaya peluang beras di Negara A adalah 0,5 pakaian, sedangkan di Negara B adalah 2 pakaian. Karena biaya peluangnya lebih rendah, Negara A memiliki keunggulan komparatif pada beras dan sebaiknya berspesialisasi serta mengekspornya."},
+{id:45,cat:"Makro",q:"Dalam struktur Neraca Pembayaran (Balance of Payments), transaksi yang mencatat ekspor-impor barang dan jasa, pendapatan investasi, serta transfer dana sepihak dikelompokkan ke dalam...",opts:["Neraca Modal (Capital Account)","Neraca Transaksi Berjalan (Current Account)","Neraca Finansial (Financial Account)","Cadangan Devisa (Official Reserve)","Selisih Perhitungan Bersih (Errors and Omissions)"],ans:1,exp:"Ekspor-impor barang, jasa, pendapatan investasi, dan transfer sepihak dicatat dalam Neraca Transaksi Berjalan (Current Account)."},
+{id:46,cat:"Makro",q:"Kenaikan suku bunga acuan oleh Bank Sentral Amerika Serikat memicu capital outflow dari negara berkembang. Dampak langsung bagi Indonesia di pasar valuta asing adalah...",opts:["Permintaan USD meningkat, Rupiah mengalami depresiasi.","Penawaran USD meningkat, Rupiah mengalami apresiasi.","Permintaan USD menurun, Rupiah mengalami apresiasi.","Cadangan devisa negara bertambah secara otomatis.","Impor barang dari Amerika Serikat menjadi lebih murah."],ans:0,exp:"Pelarian modal (capital outflow) ke AS meningkatkan permintaan terhadap USD, sehingga memicu depresiasi Rupiah."},
+{id:47,cat:"Makro",q:"Sistem nilai tukar mata uang di mana penetapan harga valuta asing diserahkan sepenuhnya kepada interaksi permintaan dan penawaran pasar tanpa intervensi bank sentral dinamakan...",opts:["Fixed Exchange Rate System","Managed Floating Exchange Rate System","Free Floating Exchange Rate System","Pegged Exchange Rate System","Gold Standard System"],ans:2,exp:"Nilai tukar yang diserahkan sepenuhnya pada mekanisme pasar tanpa campur tangan bank sentral disebut Free Floating Exchange Rate System."},
+{id:48,cat:"Makro",q:"Instrumen baku yang digunakan pemerintah Indonesia untuk menutup defisit anggaran (APBN) adalah dengan cara...",opts:["Mencetak uang kertas baru dalam jumlah besar","Menerbitkan Surat Berharga Negara (SBN/SUN/Sukuk)","Menjual cadangan emas bank sentral","Menghapuskan seluruh belanja operasional pemerintah daerah","Memotong gaji pegawai negeri secara nasional"],ans:1,exp:"Pemerintah Indonesia menutup defisit APBN dengan menerbitkan instrumen Surat Berharga Negara (SBN/SUN/Sukuk)."},
+{id:49,cat:"Makro",q:"Berdasarkan Persamaan Kuantitas Uang Irving Fisher (M &times; V = P &times; Y), jika kecepatan perputaran uang (V) dan output riil (Y) tetap dalam jangka pendek, peningkatan jumlah uang beredar (M) sebesar 10% akan mengakibatkan...",opts:["Penurunan tingkat harga (P) sebesar 10%","Peningkatan tingkat harga (P) sebesar 10%","Peningkatan output riil (Y) sebesar 10%","Penurunan kecepatan perputaran uang (V) sebesar 10%","Tingkat harga (P) tidak mengalami perubahan"],ans:1,exp:"Sesuai persamaan M&times;V = P&times;Y, jika V dan Y tetap, kenaikan M sebesar 10% akan menaikkan tingkat harga (P) sebesar 10% pula."},
+{id:50,cat:"Makro",q:"Lembaga independen di Indonesia yang berwenang mengatur, mengawasi, dan melindungi konsumen di sektor industri jasa keuangan (Perbankan, Pasar Modal, dan IKNB) adalah...",opts:["Bank Indonesia (BI)","Otoritas Jasa Keuangan (OJK)","Lembaga Penjamin Simpanan (LPS)","Kementerian Keuangan (Kemenkeu)","Badan Pengawas Pasar Modal (Bapepam-LK)"],ans:1,exp:"Lembaga independen pengawas dan pengatur sektor jasa keuangan Indonesia adalah Otoritas Jasa Keuangan (OJK)."}
+];
 
-        // Leaderboard Mock Data
-        const leaderboardSeed = [
-            { name: "Ahmad Fauzi", school: "SMA Negeri 8 Jakarta", score: 185, correct: 47, wrong: 3, empty: 0 },
-            { name: "Siti Nurhaliza", school: "SMA IC Gorontalo", score: 172, correct: 44, wrong: 4, empty: 2 },
-            { name: "Kevin Sanjaya", school: "SMA Sutomo 1 Medan", score: 160, correct: 42, wrong: 8, empty: 0 },
-            { name: "Dewi Lestari", school: "SMA Negeri 3 Semarang", score: 148, correct: 39, wrong: 8, empty: 3 },
-            { name: "Andi Wijaya", school: "SMA Negeri 1 Yogyakarta", score: 135, correct: 36, wrong: 9, empty: 5 }
-        ];
+const TOTAL_SOAL = QUESTIONS.length;
+const DURATION_SECONDS = 120 * 60;
+const LETTERS = ["A","B","C","D","E"];
 
-        // State Variables
-        let currentUser = { name: "", school: "" };
-        let currentQuestionIndex = 0;
-        let userAnswers = new Array(50).fill(null);
-        let userDoubts = new Array(50).fill(false);
-        let timerSeconds = 120 * 60;
-        let timerInterval = null;
+/* ======================================================================
+   STATE
+   ====================================================================== */
+const state = {
+  peserta: { nama: "", no: "" },
+  current: 0,
+  answers: new Array(TOTAL_SOAL).fill(null),
+  flags: new Array(TOTAL_SOAL).fill(false),
+  timeLeft: DURATION_SECONDS,
+  timerId: null,
+  finished: false,
+  lastSubmittedDocId: null
+};
 
-        function startExam(e) {
-            e.preventDefault();
-            const nameInput = document.getElementById("input-nama").value.trim();
-            const schoolInput = document.getElementById("input-sekolah").value.trim();
+/* ======================================================================
+   DOM HELPERS
+   ====================================================================== */
+const $ = (id) => document.getElementById(id);
+function showView(name){
+  $("view-login").classList.toggle("hidden-view", name !== "login");
+  $("view-exam").classList.toggle("hidden-view", name !== "exam");
+  $("view-result").classList.toggle("hidden-view", name !== "result");
+  window.scrollTo(0,0);
+}
+function formatTime(totalSeconds){
+  const s = Math.max(0, totalSeconds);
+  const h = String(Math.floor(s/3600)).padStart(2,"0");
+  const m = String(Math.floor((s%3600)/60)).padStart(2,"0");
+  const sec = String(Math.floor(s%60)).padStart(2,"0");
+  return `${h}:${m}:${sec}`;
+}
 
-            if (!nameInput || !schoolInput) return;
+/* ======================================================================
+   LOGIN
+   ====================================================================== */
+$("login-form").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  const nama = $("input-nama").value.trim();
+  const no = $("input-no").value.trim();
+  const kode = $("input-kode").value.trim();
+  if(!nama || !no || !kode){
+    $("login-error").textContent = "Semua kolom wajib diisi.";
+    $("login-error").classList.remove("hidden-view");
+    return;
+  }
+  state.peserta.nama = nama;
+  state.peserta.no = no;
+  $("exam-identity").textContent = `${nama} \u2022 Paket Try Out KSR - Ekonomi A`;
+  startExam();
+});
 
-            currentUser.name = nameInput;
-            currentUser.school = schoolInput;
+/* ======================================================================
+   EXAM RENDER
+   ====================================================================== */
+function renderQuestion(){
+  const idx = state.current;
+  const item = QUESTIONS[idx];
+  const badgeColor = item.cat === "Mikro" ? "bg-mikro-bg text-mikro" : "bg-makro-bg text-makro";
 
-            document.getElementById("user-display-name").textContent = currentUser.name;
-            document.getElementById("user-display-school").textContent = currentUser.school;
+  let optsHtml = "";
+  item.opts.forEach((opt, i)=>{
+    const selected = state.answers[idx] === i;
+    optsHtml += `
+      <div data-i="${i}" class="option-item cursor-pointer flex items-start gap-3 border rounded-xl px-4 py-3 mb-2.5
+        ${selected ? "border-blue-600 bg-blue-50" : "border-slate-200 hover:border-slate-300"}">
+        <span class="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold
+          ${selected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"}">${LETTERS[i]}</span>
+        <span class="text-sm leading-relaxed pt-0.5">${opt}</span>
+      </div>`;
+  });
 
-            document.getElementById("page-login").classList.add("hidden");
-            document.getElementById("page-exam").classList.remove("hidden");
+  $("question-panel").innerHTML = `
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${badgeColor}">${item.cat}ekonomi</span>
+      <span class="text-xs text-slate-400">Soal ${idx+1} / ${TOTAL_SOAL}</span>
+    </div>
+    <p class="text-[15px] leading-relaxed text-slate-800 mb-5">${item.q}</p>
+    <div>${optsHtml}</div>
+  `;
 
-            renderNavigationGrid();
-            loadQuestion(0);
-            startTimer();
-        }
+  document.querySelectorAll(".option-item").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const i = parseInt(el.dataset.i, 10);
+      state.answers[idx] = i;
+      renderQuestion();
+      renderNavGrid();
+    });
+  });
 
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                if (timerSeconds <= 0) {
-                    clearInterval(timerInterval);
-                    finishExam();
-                    return;
-                }
-                timerSeconds--;
-                const mins = Math.floor(timerSeconds / 60);
-                const secs = timerSeconds % 60;
-                document.getElementById("timer-display").textContent = 
-                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
+  $("btn-prev").disabled = idx === 0;
+  $("btn-next").textContent = idx === TOTAL_SOAL - 1 ? "Selesai \u2192" : "Selanjutnya \u2192";
+  $("btn-flag").classList.toggle("bg-amber-400", state.flags[idx]);
+  $("btn-flag").classList.toggle("text-white", state.flags[idx]);
+  $("btn-flag").classList.toggle("border-transparent", state.flags[idx]);
+}
 
-        function loadQuestion(index) {
-            currentQuestionIndex = index;
-            const q = questionsData[index];
+function renderNavGrid(){
+  let html = "";
+  for(let i=0;i<TOTAL_SOAL;i++){
+    let cls = "bg-slate-200 text-slate-600 hover:bg-slate-300";
+    if(state.flags[i]) cls = "bg-amber-400 text-white";
+    else if(state.answers[i] !== null) cls = "bg-blue-600 text-white";
+    const ring = i === state.current ? "ring-2 ring-offset-1 ring-navy-700" : "";
+    html += `<button data-i="${i}" class="nav-cell ${cls} ${ring} rounded-lg text-xs font-semibold h-9 w-9 flex items-center justify-center">${i+1}</button>`;
+  }
+  $("nav-grid").innerHTML = html;
+  document.querySelectorAll("#nav-grid button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      state.current = parseInt(btn.dataset.i, 10);
+      renderQuestion();
+      renderNavGrid();
+    });
+  });
+}
 
-            document.getElementById("question-category").textContent = q.category;
-            document.getElementById("question-number-title").textContent = `Soal No. ${index + 1} dari 50`;
-            document.getElementById("question-text").innerHTML = q.question;
+$("btn-prev").addEventListener("click", ()=>{
+  if(state.current > 0){ state.current--; renderQuestion(); renderNavGrid(); }
+});
+$("btn-next").addEventListener("click", ()=>{
+  if(state.current < TOTAL_SOAL - 1){ state.current++; renderQuestion(); renderNavGrid(); }
+  else { confirmFinish(); }
+});
+$("btn-flag").addEventListener("click", ()=>{
+  state.flags[state.current] = !state.flags[state.current];
+  renderQuestion();
+  renderNavGrid();
+});
+$("btn-finish").addEventListener("click", confirmFinish);
 
-            const svgContainer = document.getElementById("question-svg-container");
-            svgContainer.innerHTML = q.svg ? q.svg : "";
+function confirmFinish(){
+  const answered = state.answers.filter(a=>a!==null).length;
+  const ok = confirm(`Anda telah menjawab ${answered} dari ${TOTAL_SOAL} soal. Selesaikan dan submit ujian sekarang?`);
+  if(ok) finishExam(false);
+}
 
-            const optionsContainer = document.getElementById("options-container");
-            optionsContainer.innerHTML = "";
+/* ======================================================================
+   TIMER
+   ====================================================================== */
+function startExam(){
+  showView("exam");
+  state.timeLeft = DURATION_SECONDS;
+  renderQuestion();
+  renderNavGrid();
+  $("timer").textContent = formatTime(state.timeLeft);
+  state.timerId = setInterval(()=>{
+    state.timeLeft--;
+    $("timer").textContent = formatTime(state.timeLeft);
+    if(state.timeLeft <= 0){
+      clearInterval(state.timerId);
+      finishExam(true);
+    }
+  }, 1000);
+}
 
-            q.options.forEach((opt, optIdx) => {
-                const isSelected = userAnswers[index] === optIdx;
-                const optBtn = document.createElement("button");
-                optBtn.type = "button";
-                optBtn.onclick = () => selectOption(optIdx);
-                optBtn.className = `w-full text-left p-3 rounded-lg border text-sm transition flex items-center space-x-3 ${
-                    isSelected 
-                        ? 'bg-blue-50 border-ksr-blue text-ksr-blue font-semibold shadow-sm' 
-                        : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                }`;
+/* ======================================================================
+   SCORING + FINISH
+   ====================================================================== */
+function computeResults(){
+  let benar=0, salah=0, kosong=0, mikroBenar=0, makroBenar=0, mikroTotal=0, makroTotal=0;
+  QUESTIONS.forEach((item, i)=>{
+    if(item.cat === "Mikro") mikroTotal++; else makroTotal++;
+    const a = state.answers[i];
+    if(a === null){ kosong++; return; }
+    if(a === item.ans){
+      benar++;
+      if(item.cat === "Mikro") mikroBenar++; else makroBenar++;
+    } else {
+      salah++;
+    }
+  });
+  let skor = benar*4 - salah*1;
+  skor = Math.max(-50, Math.min(200, skor));
+  return { benar, salah, kosong, skor, mikroBenar, mikroTotal, makroBenar, makroTotal };
+}
 
-                optBtn.innerHTML = `
-                    <span class="w-5 h-5 rounded-full border flex items-center justify-center text-xs shrink-0 ${
-                        isSelected ? 'border-ksr-blue bg-ksr-blue text-white' : 'border-gray-400'
-                    }">${String.fromCharCode(65 + optIdx)}</span>
-                    <span class="flex-1">${opt}</span>
-                `;
-                optionsContainer.appendChild(optBtn);
-            });
+function finishExam(autoSubmitted){
+  if(state.finished) return;
+  state.finished = true;
+  if(state.timerId) clearInterval(state.timerId);
 
-            document.getElementById("checkbox-doubt").checked = userDoubts[index];
-            document.getElementById("btn-prev").disabled = index === 0;
-            document.getElementById("btn-next").textContent = index === 49 ? "Selesai" : "Selanjutnya →";
+  const r = computeResults();
+  showView("result");
 
-            updateGridButtons();
-        }
+  $("result-score").textContent = r.skor;
+  $("result-benar").textContent = r.benar;
+  $("result-salah").textContent = r.salah;
+  $("result-kosong").textContent = r.kosong;
 
-        function selectOption(optIdx) {
-            userAnswers[currentQuestionIndex] = optIdx;
-            loadQuestion(currentQuestionIndex);
-        }
+  const pctMikro = r.mikroTotal ? Math.round((r.mikroBenar/r.mikroTotal)*100) : 0;
+  const pctMakro = r.makroTotal ? Math.round((r.makroBenar/r.makroTotal)*100) : 0;
+  $("bar-mikro").style.width = pctMikro + "%";
+  $("bar-makro").style.width = pctMakro + "%";
+  $("pct-mikro-label").textContent = pctMikro + "%";
+  $("pct-makro-label").textContent = pctMakro + "%";
+  $("detail-mikro").textContent = `${r.mikroBenar} dari ${r.mikroTotal} soal benar`;
+  $("detail-makro").textContent = `${r.makroBenar} dari ${r.makroTotal} soal benar`;
 
-        function toggleDoubt() {
-            userDoubts[currentQuestionIndex] = !userDoubts[currentQuestionIndex];
-            document.getElementById("checkbox-doubt").checked = userDoubts[currentQuestionIndex];
-            updateGridButtons();
-        }
+  renderReview();
+  submitToLeaderboard(r);
+  listenLeaderboard();
 
-        function navigateQuestion(direction) {
-            const newIndex = currentQuestionIndex + direction;
-            if (newIndex >= 0 && newIndex < 50) {
-                loadQuestion(newIndex);
-            } else if (newIndex === 50) {
-                confirmFinishExam();
-            }
-        }
+  if(autoSubmitted){
+    setTimeout(()=>alert("Waktu ujian telah habis. Jawaban Anda telah otomatis di-submit."), 200);
+  }
+}
 
-        function renderNavigationGrid() {
-            const grid = document.getElementById("navigation-grid");
-            grid.innerHTML = "";
+$("btn-download").addEventListener("click", ()=> window.print());
 
-            for (let i = 0; i < 50; i++) {
-                const btn = document.createElement("button");
-                btn.id = `grid-btn-${i}`;
-                btn.type = "button";
-                btn.onclick = () => loadQuestion(i);
-                btn.className = "h-9 rounded font-medium text-xs flex items-center justify-center transition border";
-                btn.textContent = i + 1;
-                grid.appendChild(btn);
-            }
-            updateGridButtons();
-        }
+/* ======================================================================
+   REVIEW / PEMBAHASAN
+   ====================================================================== */
+function renderReview(){
+  let html = "";
+  QUESTIONS.forEach((item, i)=>{
+    const userAns = state.answers[i];
+    const correct = userAns === item.ans;
+    const statusBadge = userAns === null
+      ? `<span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Kosong</span>`
+      : correct
+        ? `<span class="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Benar</span>`
+        : `<span class="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded-full">Salah</span>`;
 
-        function updateGridButtons() {
-            for (let i = 0; i < 50; i++) {
-                const btn = document.getElementById(`grid-btn-${i}`);
-                if (!btn) continue;
+    let optsHtml = "";
+    item.opts.forEach((opt, oi)=>{
+      let cls = "border-slate-200";
+      let tag = "";
+      if(oi === item.ans){ cls = "border-emerald-400 bg-emerald-50"; tag = " (Kunci)"; }
+      if(userAns === oi && oi !== item.ans){ cls = "border-red-400 bg-red-50"; tag = " (Jawaban Anda)"; }
+      optsHtml += `<div class="border ${cls} rounded-lg px-3 py-2 text-xs mb-1.5"><b>${LETTERS[oi]}.</b> ${opt}${tag}</div>`;
+    });
 
-                const isCurrent = i === currentQuestionIndex;
-                const isAnswered = userAnswers[i] !== null;
-                const isDoubt = userDoubts[i];
+    html += `
+    <div class="py-3">
+      <button class="review-toggle w-full flex items-center justify-between gap-3 text-left" data-i="${i}">
+        <span class="text-sm font-medium text-slate-700">Soal ${i+1} &middot; ${item.cat}ekonomi</span>
+        <span class="flex items-center gap-2">${statusBadge}<svg class="chev w-4 h-4 text-slate-400 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+      </button>
+      <div class="accordion-body" id="acc-${i}">
+        <p class="text-sm text-slate-700 leading-relaxed mt-3 mb-3">${item.q}</p>
+        ${optsHtml}
+        <div class="mt-3 bg-navy-50 border border-navy-100 rounded-lg px-3 py-2.5 text-xs text-navy-800 leading-relaxed">
+          <b>Pembahasan:</b> ${item.exp}
+        </div>
+      </div>
+    </div>`;
+  });
+  $("review-list").innerHTML = html;
 
-                let classNames = "h-9 rounded font-medium text-xs flex items-center justify-center transition border ";
+  document.querySelectorAll(".review-toggle").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = btn.dataset.i;
+      const body = $("acc-"+i);
+      const chev = btn.querySelector(".chev");
+      const isOpen = body.classList.toggle("open");
+      chev.style.transform = isOpen ? "rotate(180deg)" : "rotate(0deg)";
+    });
+  });
+}
 
-                if (isCurrent) {
-                    classNames += "ring-2 ring-offset-1 ring-ksr-blue font-bold ";
-                }
+/* ======================================================================
+   FIREBASE LEADERBOARD
+   ====================================================================== */
+async function submitToLeaderboard(r){
+  if(!db){
+    console.warn("Firestore belum terhubung - konfigurasi firebaseConfig terlebih dahulu.");
+    return;
+  }
+  try{
+    const docRef = await db.collection(LEADERBOARD_COLLECTION).add({
+      nama: state.peserta.nama,
+      noPeserta: state.peserta.no,
+      skor: r.skor,
+      benar: r.benar,
+      salah: r.salah,
+      kosong: r.kosong,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    state.lastSubmittedDocId = docRef.id;
+  }catch(e){
+    console.error("Gagal mengirim skor ke leaderboard:", e);
+  }
+}
 
-                if (isDoubt) {
-                    classNames += "bg-amber-400 text-white border-amber-500";
-                } else if (isAnswered) {
-                    classNames += "bg-ksr-blue text-white border-ksr-blue";
-                } else {
-                    classNames += "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200";
-                }
+function listenLeaderboard(){
+  if(!db){
+    $("leaderboard-body").innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400 text-xs leading-relaxed">
+      Papan peringkat belum aktif.<br>Lengkapi <code>firebaseConfig</code> pada kode sumber untuk mengaktifkan leaderboard real-time.
+    </td></tr>`;
+    $("result-rank").textContent = "1 / 1";
+    return;
+  }
+  db.collection(LEADERBOARD_COLLECTION).orderBy("skor","desc")
+    .onSnapshot((snapshot)=>{
+      const rows = snapshot.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderLeaderboard(rows);
+    }, (err)=>{
+      console.error("Gagal memuat leaderboard:", err);
+      $("leaderboard-body").innerHTML = `<tr><td colspan="4" class="py-6 text-center text-red-400 text-xs">Gagal memuat papan peringkat.</td></tr>`;
+    });
+}
 
-                btn.className = classNames;
-            }
-        }
+function renderLeaderboard(rows){
+  const top = rows.slice(0, 20);
+  if(top.length === 0){
+    $("leaderboard-body").innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400 text-sm">Belum ada data peserta.</td></tr>`;
+  } else {
+    let html = "";
+    top.forEach((row, i)=>{
+      const isMe = row.id === state.lastSubmittedDocId;
+      html += `<tr class="${isMe ? "bg-navy-50 font-semibold" : ""} border-b border-slate-50 last:border-0">
+        <td class="py-2 pr-2 text-slate-500">${i+1}</td>
+        <td class="py-2 pr-2">${row.nama || "-"}</td>
+        <td class="py-2 pr-2 text-slate-500">${row.noPeserta || "-"}</td>
+        <td class="py-2 text-right font-semibold text-navy-900">${row.skor}</td>
+      </tr>`;
+    });
+    $("leaderboard-body").innerHTML = html;
+  }
 
-        function confirmFinishExam() {
-            document.getElementById("modal-finish").classList.remove("hidden");
-        }
-
-        function closeModal() {
-            document.getElementById("modal-finish").classList.add("hidden");
-        }
-
-        function finishExam() {
-            clearInterval(timerInterval);
-            closeModal();
-
-            document.getElementById("page-exam").classList.add("hidden");
-            document.getElementById("page-result").classList.remove("hidden");
-
-            calculateResults();
-        }
-
-        function calculateResults() {
-            let correctCount = 0;
-            let wrongCount = 0;
-            let emptyCount = 0;
-
-            let microCorrect = 0;
-            let macroCorrect = 0;
-
-            questionsData.forEach((q, idx) => {
-                const ans = userAnswers[idx];
-                if (ans === null) {
-                    emptyCount++;
-                } else if (ans === q.answer) {
-                    correctCount++;
-                    if (idx < 30) microCorrect++;
-                    else macroCorrect++;
-                } else {
-                    wrongCount++;
-                }
-            });
-
-            const totalScore = (correctCount * 4) - (wrongCount * 1);
-
-            document.getElementById("result-user-name").textContent = currentUser.name;
-            document.getElementById("result-user-school").textContent = currentUser.school;
-
-            document.getElementById("res-score").textContent = totalScore;
-            document.getElementById("res-correct").textContent = correctCount;
-            document.getElementById("res-wrong").textContent = wrongCount;
-            document.getElementById("res-empty").textContent = emptyCount;
-
-            const microPct = Math.round((microCorrect / 30) * 100);
-            const macroPct = Math.round((macroCorrect / 20) * 100);
-
-            document.getElementById("micro-pct").textContent = `${microPct}%`;
-            document.getElementById("micro-bar").style.width = `${microPct}%`;
-            document.getElementById("micro-detail").textContent = `${microCorrect} dari 30 soal benar`;
-
-            document.getElementById("macro-pct").textContent = `${macroPct}%`;
-            document.getElementById("macro-bar").style.width = `${macroPct}%`;
-            document.getElementById("macro-detail").textContent = `${macroCorrect} dari 20 soal benar`;
-
-            renderLeaderboard(totalScore, correctCount, wrongCount, emptyCount);
-            renderDiscussion();
-        }
-
-        function renderLeaderboard(userScore, userCorrect, userWrong, userEmpty) {
-            const list = [...leaderboardSeed, {
-                name: currentUser.name,
-                school: currentUser.school,
-                score: userScore,
-                correct: userCorrect,
-                wrong: userWrong,
-                empty: userEmpty,
-                isUser: true
-            }];
-
-            list.sort((a, b) => b.score - a.score);
-
-            const tbody = document.getElementById("leaderboard-tbody");
-            tbody.innerHTML = "";
-
-            list.forEach((item, index) => {
-                const tr = document.createElement("tr");
-                tr.className = item.isUser ? "bg-blue-50/70 font-semibold text-ksr-blue" : "hover:bg-gray-50";
-
-                tr.innerHTML = `
-                    <td class="py-3 px-4 font-bold">${index + 1}</td>
-                    <td class="py-3 px-4">${item.name} ${item.isUser ? '<span class="text-[10px] bg-ksr-blue text-white px-1.5 py-0.5 rounded ml-1">Anda</span>' : ''}</td>
-                    <td class="py-3 px-4 text-gray-600">${item.school}</td>
-                    <td class="py-3 px-4 text-center font-extrabold text-ksr-blue">${item.score}</td>
-                    <td class="py-3 px-4 text-center text-emerald-600 font-medium">${item.correct}</td>
-                    <td class="py-3 px-4 text-center text-rose-600 font-medium">${item.wrong}</td>
-                    <td class="py-3 px-4 text-center text-gray-400 font-medium">${item.empty}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderDiscussion() {
-            const container = document.getElementById("discussion-container");
-            container.innerHTML = "";
-
-            questionsData.forEach((q, idx) => {
-                const userAns = userAnswers[idx];
-                const isCorrect = userAns === q.answer;
-                const isUnanswered = userAns === null;
-
-                let badgeClass = "bg-rose-100 text-rose-700";
-                let badgeText = "Salah";
-
-                if (isCorrect) {
-                    badgeClass = "bg-emerald-100 text-emerald-700";
-                    badgeText = "Benar";
-                } else if (isUnanswered) {
-                    badgeClass = "bg-gray-100 text-gray-600";
-                    badgeText = "Tidak Dijawab";
-                }
-
-                const itemDiv = document.createElement("div");
-                itemDiv.className = "border border-gray-200 rounded-xl p-4 space-y-2 bg-gray-50/50";
-
-                itemDiv.innerHTML = `
-                    <div class="flex justify-between items-center text-xs font-bold">
-                        <span class="text-ksr-blue uppercase">${q.category} - Soal #${idx + 1}</span>
-                        <span class="px-2 py-0.5 rounded ${badgeClass}">${badgeText}</span>
-                    </div>
-                    <p class="text-sm font-medium text-gray-800">${q.question}</p>
-                    <div class="text-xs space-y-1 text-gray-600 pt-1">
-                        <p><strong>Jawaban Anda:</strong> ${userAns !== null ? q.options[userAns] : '<span class="italic text-gray-400">Tidak menjawab</span>'}</p>
-                        <p class="text-emerald-700"><strong>Jawaban Benar:</strong> ${q.options[q.answer]}</p>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg border border-gray-200 text-xs text-gray-700 mt-2">
-                        <strong class="text-ksr-blue block mb-1">Pembahasan:</strong>
-                        ${q.explanation}
-                    </div>
-                `;
-                container.appendChild(itemDiv);
-            });
-        }
-    </script>
+  const myIndex = rows.findIndex(r=>r.id === state.lastSubmittedDocId);
+  if(myIndex >= 0){
+    $("result-rank").textContent = `${myIndex+1} / ${rows.length}`;
+  }
+}
+</script>
 </body>
 </html>
