@@ -136,14 +136,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Configuration Firebase
+    // Configuration Firebase Terpasang
     const firebaseConfig = {
-      apiKey: "PASTE_API_KEY_KAMU_DI_SINI",
+      apiKey: "AIzaSyAE7qZ7bLd7LxJnmGgQIEheVjXN4IiUt8U",
       authDomain: "try-out-ksr.firebaseapp.com",
       projectId: "try-out-ksr",
       storageBucket: "try-out-ksr.firebasestorage.app",
-      messagingSenderId: "PASTE_SENDER_ID_DI_SINI",
-      appId: "PASTE_APP_ID_DI_SINI"
+      messagingSenderId: "296051753598",
+      appId: "1:296051753598:web:96e6d441f5722bd5e78e2f",
+      measurementId: "G-PTJ9HSREZD"
     };
 
     // Inisialisasi Firebase
@@ -205,14 +206,64 @@
       }
     };
 
-    // Load leaderboard saat web pertama dibuka
     window.addEventListener("DOMContentLoaded", window.muatLeaderboard);
   </script>
 
   <!-- Aplikasi Logic JavaScript -->
   <script>
-    // Array Soal (Masukkan 50 soal kamu di sini)
-    const daftarSoal = [];
+    // Array 50 Soal Ekonomi
+    const daftarSoal = [
+      { kategori: "Mikroekonomi", soal: "1. Teks soal nomor 1 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "2. Teks soal nomor 2 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "3. Teks soal nomor 3 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "4. Teks soal nomor 4 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "5. Teks soal nomor 5 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "6. Teks soal nomor 6 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "7. Teks soal nomor 7 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "8. Teks soal nomor 8 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "9. Teks soal nomor 9 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "10. Teks soal nomor 10 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "11. Teks soal nomor 11 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "12. Teks soal nomor 12 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "13. Teks soal nomor 13 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "14. Teks soal nomor 14 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Mikroekonomi", soal: "15. Teks soal nomor 15 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "16. Teks soal nomor 16 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "17. Teks soal nomor 17 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "18. Teks soal nomor 18 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "19. Teks soal nomor 19 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "20. Teks soal nomor 20 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "21. Teks soal nomor 21 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "22. Teks soal nomor 22 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "23. Teks soal nomor 23 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "24. Teks soal nomor 24 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Makroekonomi", soal: "25. Teks soal nomor 25 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "26. Teks soal nomor 26 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "27. Teks soal nomor 27 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "28. Teks soal nomor 28 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "29. Teks soal nomor 29 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "30. Teks soal nomor 30 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "31. Teks soal nomor 31 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "32. Teks soal nomor 32 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "33. Teks soal nomor 33 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "34. Teks soal nomor 34 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Keuangan & Akuntansi", soal: "35. Teks soal nomor 35 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "36. Teks soal nomor 36 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "37. Teks soal nomor 37 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "38. Teks soal nomor 38 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "39. Teks soal nomor 39 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "40. Teks soal nomor 40 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "41. Teks soal nomor 41 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "42. Teks soal nomor 42 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "43. Teks soal nomor 43 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "44. Teks soal nomor 44 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Ekonomi Internasional", soal: "45. Teks soal nomor 45 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Kebijakan Moneter & Fiskal", soal: "46. Teks soal nomor 46 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Kebijakan Moneter & Fiskal", soal: "47. Teks soal nomor 47 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Kebijakan Moneter & Fiskal", soal: "48. Teks soal nomor 48 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Kebijakan Moneter & Fiskal", soal: "49. Teks soal nomor 49 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
+      { kategori: "Kebijakan Moneter & Fiskal", soal: "50. Teks soal nomor 50 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 }
+    ];
 
     let currentIndex = 0;
     let jawabanSiswa = [];
@@ -225,11 +276,6 @@
 
       if (!namaUser) {
         alert("Silakan masukkan nama Anda terlebih dahulu.");
-        return;
-      }
-
-      if (daftarSoal.length === 0) {
-        alert("Belum ada soal yang dimuat.");
         return;
       }
 
