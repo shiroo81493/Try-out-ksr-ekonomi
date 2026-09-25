@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Try Out KSR - Bidang Ekonomi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ksr: {
+                            blue: '#0052CC',
+                            darkBlue: '#0747A6',
+                            lightBlue: '#DEEBFF',
+                            accent: '#FFAB00',
+                            grayBg: '#F4F5F7'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-select {
+            user-select: none;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+    </style>
+</head>
+<body class="bg-ksr-grayBg font-sans text-gray-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- PAGE 1: LOGIN FORM -->
+    <div id="page-login" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-ksr-blue rounded-full mb-3 text-2xl font-bold">
+                    KSR
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Try Out KSR 2026</h1>
+                <p class="text-sm text-gray-500 font-medium">Kompetisi Sains Ruangguru - Bidang Ekonomi</p>
+            </div>
+
+            <form id="form-login" onsubmit="startExam(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Nama Lengkap Peserta</label>
+                    <input type="text" id="input-nama" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ksr-blue focus:border-ksr-blue outline-none transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Nama Sekolah / Instansi</label>
+                    <input type="text" id="input-sekolah" required placeholder="Contoh: SMA Negeri 1 Jakarta" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ksr-blue focus:border-ksr-blue outline-none transition text-sm">
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3.5 text-xs text-blue-800 space-y-1">
+                    <p class="font-bold">Ketentuan Ujian:</p>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        <li><strong>50 Soal Pilihan Ganda</strong> (1–30 Mikro, 31–50 Makro)</li>
+                        <li><strong>Durasi:</strong> 120 Menit</li>
+                        <li><strong>Sistem Nilai:</strong> Benar +4 | Salah -1 | Kosong 0</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-ksr-blue hover:bg-ksr-darkBlue text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-200">
+                    Mulai Ujian Sekarang
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PAGE 2: EXAM ROOM -->
+    <div id="page-exam" class="hidden min-h-screen flex flex-col justify-between">
+        <!-- Header Bar -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div>
+                    <h1 class="text-lg font-bold text-ksr-blue">Try Out KSR - Bidang Ekonomi</h1>
+                    <p class="text-xs text-gray-500"><span id="user-display-name" class="font-semibold text-gray-700"></span> (<span id="user-display-school"></span>)</p>
+                </div>
+                <div class="flex items-center space-x-2 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg text-red-600">
+                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span id="timer-display" class="font-mono text-sm font-bold">120:00</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body (2 Kolom) -->
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Kolom Kiri: Area Soal -->
+            <section class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-between min-h-[500px]">
+                <div>
+                    <div class="flex justify-between items-center border-b pb-3 mb-4">
+                        <span id="question-category" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-blue-100 text-ksr-blue">
+                            Ekonomi Mikro
+                        </span>
+                        <span id="question-number-title" class="text-sm font-bold text-gray-500">
+                            Soal No. 1 dari 50
+                        </span>
+                    </div>
+
+                    <div id="question-container" class="space-y-4">
+                        <p id="question-text" class="text-gray-800 text-base leading-relaxed font-medium"></p>
+                        <div id="question-svg-container" class="my-4 flex justify-center"></div>
+                    </div>
+
+                    <div id="options-container" class="mt-6 space-y-2.5"></div>
+                </div>
+
+                <!-- Bottom Navigation Bar -->
+                <div class="pt-6 mt-6 border-t border-gray-100 flex flex-wrap justify-between items-center gap-3">
+                    <button id="btn-prev" onclick="navigateQuestion(-1)" class="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed">
+                        &larr; Sebelumnya
+                    </button>
+
+                    <button id="btn-doubt" onclick="toggleDoubt()" class="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-sm font-medium transition flex items-center space-x-1.5">
+                        <input type="checkbox" id="checkbox-doubt" class="pointer-events-none">
+                        <span>Tandai Ragu-ragu</span>
+                    </button>
+
+                    <button id="btn-next" onclick="navigateQuestion(1)" class="px-5 py-2 bg-ksr-blue hover:bg-ksr-darkBlue text-white rounded-lg text-sm font-medium transition">
+                        Selanjutnya &rarr;
+                    </button>
+                </div>
+            </section>
+
+            <!-- Kolom Kanan: Navigasi Nomor Soal -->
+            <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex flex-col justify-between h-fit">
+                <div>
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Navigasi Soal</h3>
+                    
+                    <div class="grid grid-cols-3 gap-1 mb-4 text-[11px] text-gray-600">
+                        <div class="flex items-center space-x-1">
+                            <span class="w-3 h-3 bg-gray-200 rounded border border-gray-300"></span>
+                            <span>Belum</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="w-3 h-3 bg-ksr-blue rounded"></span>
+                            <span>Dijawab</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="w-3 h-3 bg-amber-400 rounded"></span>
+                            <span>Ragu</span>
+                        </div>
+                    </div>
+
+                    <div id="navigation-grid" class="grid grid-cols-5 gap-2 max-h-[380px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <button onclick="confirmFinishExam()" class="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm shadow transition">
+                        Selesaikan Ujian
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- PAGE 3: POST-EXAM (RESULTS & LEADERBOARD) -->
+    <div id="page-result" class="hidden min-h-screen py-8 px-4 max-w-6xl mx-auto space-y-8">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 text-center space-y-2">
+            <h1 class="text-2xl font-bold text-gray-800">Hasil Try Out KSR - Bidang Ekonomi</h1>
+            <p class="text-sm text-gray-500">Selamat! Anda telah menyelesaikan seluruh rangkaian ujian.</p>
+            <div class="inline-block bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mt-2">
+                <span class="text-xs text-gray-500 uppercase font-bold block">Peserta:</span>
+                <span id="result-user-name" class="text-base font-bold text-ksr-blue"></span> 
+                <span class="text-sm text-gray-600"> - </span>
+                <span id="result-user-school" class="text-sm font-medium text-gray-700"></span>
+            </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                <p class="text-xs font-semibold text-gray-500 uppercase">Skor Total</p>
+                <p id="res-score" class="text-3xl font-extrabold text-ksr-blue mt-1">0</p>
+                <p class="text-[10px] text-gray-400 mt-0.5">Maks (+200) | Min (-50)</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                <p class="text-xs font-semibold text-gray-500 uppercase">Jawaban Benar (+4)</p>
+                <p id="res-correct" class="text-3xl font-extrabold text-emerald-600 mt-1">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                <p class="text-xs font-semibold text-gray-500 uppercase">Jawaban Salah (-1)</p>
+                <p id="res-wrong" class="text-3xl font-extrabold text-rose-600 mt-1">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                <p class="text-xs font-semibold text-gray-500 uppercase">Tidak Dijawab (0)</p>
+                <p id="res-empty" class="text-3xl font-extrabold text-gray-400 mt-1">0</p>
+            </div>
+        </div>
+
+        <!-- Diagnostik Penguasaan Materi -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center space-x-2">
+                <svg class="w-5 h-5 text-ksr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span>Diagnostik Penguasaan Materi</span>
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-semibold">
+                        <span class="text-gray-700">Ekonomi Mikro (Soal 1–30)</span>
+                        <span id="micro-pct" class="text-ksr-blue">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                        <div id="micro-bar" class="bg-ksr-blue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="micro-detail" class="text-xs text-gray-500">0 dari 30 soal benar</p>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-semibold">
+                        <span class="text-gray-700">Ekonomi Makro (Soal 31–50)</span>
+                        <span id="macro-pct" class="text-ksr-blue">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                        <div id="macro-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p id="macro-detail" class="text-xs text-gray-500">0 dari 20 soal benar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center space-x-2">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                <span>Papan Peringkat (Leaderboard)</span>
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase font-semibold">
+                            <th class="py-3 px-4">Peringkat</th>
+                            <th class="py-3 px-4">Nama Peserta</th>
+                            <th class="py-3 px-4">Asal Sekolah</th>
+                            <th class="py-3 px-4 text-center">Skor Total</th>
+                            <th class="py-3 px-4 text-center text-emerald-600">Benar</th>
+                            <th class="py-3 px-4 text-center text-rose-600">Salah</th>
+                            <th class="py-3 px-4 text-center text-gray-400">Kosong</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-tbody" class="divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Review & Pembahasan Soal -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center space-x-2">
+                <svg class="w-5 h-5 text-ksr-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                <span>Review & Pembahasan Soal</span>
+            </h3>
+
+            <div id="discussion-container" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMATION -->
+    <div id="modal-finish" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 text-center shadow-xl">
+            <h3 class="text-lg font-bold text-gray-800">Konfirmasi Selesai</h3>
+            <p class="text-sm text-gray-600">Apakah Anda yakin ingin mengakhiri ujian ini? Pastikan seluruh soal telah diperiksa kembali.</p>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeModal()" class="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50">Batal</button>
+                <button onclick="finishExam()" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">Ya, Selesaikan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 50 SOAL EKONOMI LENGKAP BERSUMBER DARI DATABASE UJIAN KSR
+        const questionsData = [
+            // MIKROEKONOMI (1-30)
+            {
+                id: 1, category: "Ekonomi Mikro",
+                question: "Perhatikan Kurva Kemungkinan Produksi (PPF) berikut:<br>Berdasarkan grafik di atas, kondisi alokasi sumber daya pada titik A, B, C, dan D yang paling tepat adalah...",
+                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black" stroke-width="1.5"/><line x1="30" y1="120" x2="30" y2="10" stroke="black" stroke-width="1.5"/><path d="M 30,20 Q 120,20 130,120" fill="none" stroke="blue" stroke-width="2"/><circle cx="70" cy="90" r="3" fill="black"/><text x="75" y="90" font-size="10">A (di dalam)</text><circle cx="115" cy="60" r="3" fill="black"/><text x="120" y="60" font-size="10">B</text><circle cx="90" cy="35" r="3" fill="black"/><text x="95" y="35" font-size="10">C</text><circle cx="140" cy="30" r="3" fill="black"/><text x="145" y="30" font-size="10">D (di luar)</text><text x="50" y="140" font-size="9">Barang X (Pertanian)</text><text x="5" y="60" font-size="9" transform="rotate(-90 15,60)">Barang Y (Manufaktur)</text></svg>`,
+                options: [
+                    "A. Titik D menggambarkan kondisi efisiensi alokasi sumber daya tertinggi saat ini.",
+                    "B. Pergerakan dari titik A ke titik B menggambarkan adanya opportunity cost konstan.",
+                    "C. Di titik A, perekonomian mengalami underutilization atau pengangguran sumber daya.",
+                    "D. Titik B lebih disukai daripada titik C karena memproduksi lebih banyak barang Y.",
+                    "E. Titik D dapat dicapai tanpa perlu adanya kemajuan teknologi atau penambahan input."
+                ], answer: 2,
+                explanation: "Titik A terletak di dalam kurva PPF, menunjukkan bahwa sumber daya belum dimanfaatkan secara efisien/penuh (underutilization atau pengangguran sumber daya)."
+            },
+            {
+                id: 2, category: "Ekonomi Mikro",
+                question: "Perhatikan grafik pergeseran keseimbangan pasar kopi berikut:<br>Peristiwa yang paling tepat menggambarkan perubahan titik keseimbangan dari X1 ke X2 adalah...",
+                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black"/><line x1="30" y1="120" x2="30" y2="10" stroke="black"/><line x1="40" y1="110" x2="160" y2="20" stroke="blue" stroke-width="1.5"/><text x="165" y="25" font-size="9">S2</text><line x1="80" y1="110" x2="200" y2="20" stroke="blue" stroke-width="1.5"/><text x="205" y="25" font-size="9">S1</text><line x1="40" y1="20" x2="160" y2="110" stroke="red" stroke-width="1.5"/><text x="165" y="115" font-size="9">D1</text><line x1="80" y1="20" x2="200" y2="110" stroke="red" stroke-width="1.5"/><text x="205" y="115" font-size="9">D2</text><circle cx="140" cy="80" r="3" fill="black"/><text x="145" y="85" font-size="9">X1</text><circle cx="100" cy="50" r="3" fill="black"/><text x="105" y="45" font-size="9">X2</text></svg>`,
+                options: [
+                    "A. Penurunan harga bahan baku bersamaan dengan meningkatnya tren konsumsi kopi.",
+                    "B. Bencana kekeringan di daerah penghasil kopi bersamaan dengan meningkatnya tren konsumsi kopi.",
+                    "C. Pemotongan pajak produksi kopi bersamaan dengan penurunan minat konsumen.",
+                    "D. Kenaikan harga teh (barang substitusi) bersamaan dengan ditemukannya teknologi panen kopi yang lebih efisien.",
+                    "E. Penetapan harga eceran tertinggi oleh pemerintah di bawah harga pasar."
+                ], answer: 1,
+                explanation: "Pergeseran D1 ke D2 ke kanan (kenaikan permintaan akibat tren) dan S1 ke S2 ke kiri (penurunan penawaran akibat bencana kekeringan) memindahkan keseimbangan dari X1 ke X2."
+            },
+            {
+                id: 3, category: "Ekonomi Mikro",
+                question: "Perhatikan struktur kurva biaya produksi jangka pendek berikut:<br>Apabila kurva MC berada di bawah kurva ATC (sebelum berpotongan di Titik X), maka seiring bertambahnya jumlah output, kurva ATC akan...",
+                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black"/><line x1="30" y1="120" x2="30" y2="10" stroke="black"/><path d="M 40,30 Q 100,110 180,20" fill="none" stroke="blue" stroke-width="2"/><text x="185" y="25" font-size="9">ATC</text><path d="M 50,90 Q 90,80 150,15" fill="none" stroke="red" stroke-width="2"/><text x="155" y="20" font-size="9">MC</text><circle cx="100" cy="85" r="3" fill="black"/><text x="80" y="80" font-size="9">Titik X</text></svg>`,
+                options: [
+                    "A. Meningkat (sloping upward)",
+                    "B. Bernilai negatif",
+                    "C. Mencapai titik maksimum",
+                    "D. Menurun (sloping downward)",
+                    "E. Konstan secara horizontal"
+                ], answer: 3,
+                explanation: "Jika MC < ATC, maka setiap tambahan unit output memiliki biaya lebih rendah dari rata-rata sebelumnya, sehingga kurva ATC akan terus menurun."
+            },
+            {
+                id: 4, category: "Ekonomi Mikro",
+                question: "Fungsi permintaan suatu barang ditunjukkan oleh P = 120 - 2Q. Jika harga pasar saat ini adalah P = 40, berapakah nilai koefisien elastisitas harga permintaannya (Ed) dan bagaimana sifat elastisitasnya?",
+                options: ["A. Ed = -0,5 (Inelastis)", "B. Ed = -1,0 (Elastis Uniter)", "C. Ed = -0,25 (Inelastis)", "D. Ed = -2,0 (Elastis)", "E. Ed = -1,5 (Elastis)"],
+                answer: 0,
+                explanation: "Saat P = 40, Q = (120 - 40) / 2 = 40. Turunan dQ/dP = -0,5. Ed = (dQ/dP) * (P/Q) = -0,5 * (40/40) = -0,5 (|Ed| < 1, Inelastis)."
+            },
+            {
+                id: 5, category: "Ekonomi Mikro",
+                question: "Garis anggaran (budget line) seorang konsumen akan bergeser sejajar ke kanan luar apabila...",
+                options: [
+                    "A. Harga barang X dan Y mengalami kenaikan 10% bersamaan.",
+                    "B. Pendapatan nominal konsumen meningkat sementara harga kedua barang tetap.",
+                    "C. Harga barang X naik dan harga barang Y turun secara proporsional.",
+                    "D. Pendapatan nominal konsumen berkurang sebesar 20%.",
+                    "E. Terjadi peningkatan kepuasan marginal (marginal utility) konsumen."
+                ], answer: 1,
+                explanation: "Peningkatan pendapatan nominal memperbesar daya beli konsumen tanpa merubah kemiringan (relatif harga), sehingga menggeser garis anggaran sejajar ke kanan/luar."
+            },
+            {
+                id: 6, category: "Ekonomi Mikro",
+                question: "Konsumen berada dalam kondisi keseimbangan pemaksimuman kepuasan (utility maximization) saat mengonsumsi dua barang X dan Y apabila memenuhi syarat...",
+                options: ["A. MUx = MUy", "B. Px · MUx = Py · MUy", "C. MUx / Px = MUy / Py", "D. MRSxy = Py / Px", "E. TUx = TUy"],
+                answer: 2,
+                explanation: "Keseimbangan konsumen tercapai saat kepuasan marginal per rupiah yang dibelanjakan untuk barang X sama dengan barang Y (MUx / Px = MUy / Py)."
+            },
+            {
+                id: 7, category: "Ekonomi Mikro",
+                question: "Suatu produsen menggunakan input L dan K. Harga per unit L adalah $10 dan harga K adalah $20. Saat ini, MPL = 40 unit dan MPK = 60 unit. Agar produsen meminimalkan biaya produksi untuk tingkat output yang sama, langkah yang harus diambil adalah...",
+                options: [
+                    "A. Menambah penggunaan K dan mengurangi L.",
+                    "B. Menambah penggunaan L dan mengurangi K.",
+                    "C. Mengurangi penggunaan kedua input secara proporsional.",
+                    "D. Menghentikan produksi karena berada pada fase diseconomies of scale.",
+                    "E. Mempertahankan kombinasi input saat ini karena sudah optimal."
+                ], answer: 1,
+                explanation: "MPL / PL = 40/10 = 4; MPK / PK = 60/20 = 3. Karena MPL/PL > MPK/PK, penggunaan input L memberikan produktivitas per dollar lebih tinggi, sehingga produsen harus menambah L dan mengurangi K."
+            },
+            {
+                id: 8, category: "Ekonomi Mikro",
+                question: "Diketahui fungsi biaya total suatu perusahaan adalah TC = 2Q² + 10Q + 50. Berapakah besarnya biaya marginal (MC) saat output diproduksi sebanyak 5 unit?",
+                options: ["A. 30", "B. 50", "C. 20", "D. 15", "E. 150"],
+                answer: 0,
+                explanation: "MC = d(TC)/dQ = 4Q + 10. Untuk Q = 5, MC = 4(5) + 10 = 30."
+            },
+            {
+                id: 9, category: "Ekonomi Mikro",
+                question: "Rian keluar dari pekerjaannya sebagai manajer bank dengan gaji Rp15.000.000/bulan untuk membuka kedai kopi. Dalam bulan pertama, penerimaan total kedai adalah Rp40.000.000, sedangkan biaya operasional sebesar Rp22.000.000. Berapakah laba akuntansi dan laba ekonomi Rian per bulan?",
+                options: [
+                    "A. Laba Akuntansi = Rp18.000.000; Laba Ekonomi = Rp3.000.000",
+                    "B. Laba Akuntansi = Rp18.000.000; Laba Ekonomi = Rp18.000.000",
+                    "C. Laba Akuntansi = Rp3.000.000; Laba Ekonomi = Rp18.000.000",
+                    "D. Laba Akuntansi = Rp40.000.000; Laba Ekonomi = Rp22.000.000",
+                    "E. Laba Akuntansi = Rp22.000.000; Laba Ekonomi = Rp15.000.000"
+                ], answer: 0,
+                explanation: "Laba Akuntansi = TR - Biaya Eksplisit = 40jt - 22jt = Rp18.000.000. Laba Ekonomi = Laba Akuntansi - Biaya Implisit (Gaji dilepas) = 18jt - 15jt = Rp3.000.000."
+            },
+            {
+                id: 10, category: "Ekonomi Mikro",
+                question: "Di dalam Pasar Persaingan Sempurna, sebuah perusahaan yang rasional akan memilih tingkat output pemaksimuman laba di mana...",
+                options: ["A. MR > MC", "B. P = MR = MC", "C. P = ATC minimum", "D. TR = TC", "E. MR = 0"],
+                answer: 1,
+                explanation: "Di pasar persaingan sempurna, harga ditentukan pasar sehingga P = MR. Syarat pemaksimuman laba adalah MR = MC, sehingga P = MR = MC."
+            },
+            {
+                id: 11, category: "Ekonomi Mikro",
+                question: "Perusahaan dalam Pasar Persaingan Sempurna dalam jangka pendek sebaiknya tetap beroperasi meskipun mengalami kerugian, selama harga pasar (P) masih dapat menutup...",
+                options: [
+                    "A. Biaya Total Rata-Rata (ATC)",
+                    "B. Biaya Variabel Rata-Rata (AVC)",
+                    "C. Biaya Tetap Rata-Rata (AFC)",
+                    "D. Biaya Tetap Total (TFC)",
+                    "E. Biaya Implisit"
+                ], answer: 1,
+                explanation: "Perusahaan tetap beroperasi dalam jangka pendek selama P >= AVC karena penerimaan masih mampu menutup biaya variabel dan sebagian biaya tetap."
+            },
+            {
+                id: 12, category: "Ekonomi Mikro",
+                question: "Perbedaan mendasar antara kurva permintaan yang dihadapi perusahaan monopoli dengan perusahaan dalam pasar persaingan sempurna adalah...",
+                options: [
+                    "A. Monopoli menghadapi kurva permintaan elastis sempurna (horizontal).",
+                    "B. Monopoli menghadapi kurva permintaan pasar yang miring ke bawah (downward sloping).",
+                    "C. Monopoli menghadapi kurva permintaan yang vertikal sempurna.",
+                    "D. Perusahaan persaingan sempurna dapat menentukan harga (price maker).",
+                    "E. Kurva Marginal Revenue (MR) monopoli berada di atas kurva permintaannya (P)."
+                ], answer: 1,
+                explanation: "Monopolis adalah satu-satunya penjual di pasar, sehingga menghadapi kurva permintaan pasar yang miring ke bawah (downward sloping)."
+            },
+            {
+                id: 13, category: "Ekonomi Mikro",
+                question: "Jika fungsi permintaan pasar monopoli adalah P = 100 - Q, sehingga MR = 100 - 2Q, dan biaya marginalnya konstan MC = 20, harga jual (P) yang memaksimumkan laba monopoli adalah...",
+                options: ["A. $20", "B. $40", "C. $60", "D. $80", "E. $100"],
+                answer: 2,
+                explanation: "MR = MC => 100 - 2Q = 20 => 2Q = 80 => Q = 40. Masukkan ke fungsi permintaan: P = 100 - 40 = $60."
+            },
+            {
+                id: 14, category: "Ekonomi Mikro",
+                question: "Karakteristik utama yang membedakan Pasar Persaingan Monopolistis dari Pasar Persaingan Sempurna adalah...",
+                options: [
+                    "A. Terdapat hambatan besar untuk masuk ke dalam pasar.",
+                    "B. Produk yang dijual bersifat terdiferensiasi (differentiated product).",
+                    "C. Hanya ada beberapa penjual yang menguasai pasar.",
+                    "D. Perusahaan bertindak sebagai price taker mutlak.",
+                    "E. Informasi di dalam pasar bersifat simetris sempurna."
+                ], answer: 1,
+                explanation: "Pasar persaingan monopolistis memiliki banyak penjual tetapi produknya terdiferensiasi (berbeda corak/merek), berbeda dengan persaingan sempurna yang homogen."
+            },
+            {
+                id: 15, category: "Ekonomi Mikro",
+                question: "Kurva permintaan yang patah (kinked demand curve) dalam model Oligopoli Sweezy menjelaskan fenomena...",
+                options: [
+                    "A. Kolusi terbuka antar produsen untuk menetapkan kuota.",
+                    "B. Ketegaran harga (price rigidity) di pasar oligopoli.",
+                    "C. Perilaku produsen monopoli dalam melakukan diskriminasi harga.",
+                    "D. Keseimbangan jangka panjang persaingan sempurna.",
+                    "E. Efek eksternalitas negatif akibat produksi berlebih."
+                ], answer: 1,
+                explanation: "Model Sweezy menjelaskan bahwa perusahaan oligopoli enggan mengubah harga karena asumsi pesaing akan mengikuti penurunan harga namun mengabaikan kenaikan harga, sehingga tercipta ketegaran harga."
+            },
+            {
+                id: 16, category: "Ekonomi Mikro",
+                question: "Penyebab utama terjadinya kegagalan pasar (market failure) akibat adanya barang publik (public goods) adalah timbulnya masalah...",
+                options: [
+                    "A. Moral hazard dan adverse selection",
+                    "B. Free-rider problem (penumpang gratis)",
+                    "C. Deadweight loss akibat pajak",
+                    "D. Kelebihan penawaran (surplus)",
+                    "E. Eksploitasi tenaga kerja"
+                ], answer: 1,
+                explanation: "Barang publik bersifat non-excludable dan non-rival, yang memicu masalah free-rider (orang menikmati manfaat tanpa membayar), sehingga pasar swasta enggan menyediakannya."
+            },
+            {
+                id: 17, category: "Ekonomi Mikro",
+                question: "Apabila produksi suatu barang menimbulkan eksternalitas negatif (seperti polusi limbah pabrik), maka pasar tanpa campur tangan pemerintah akan menghasilkan...",
+                options: [
+                    "A. Jumlah barang yang lebih sedikit dari kuantitas efisien sosial.",
+                    "B. Jumlah barang yang lebih banyak dari kuantitas efisien sosial dengan harga terlalu murah.",
+                    "C. Harga barang yang terlalu tinggi dibanding biaya marginal sosial.",
+                    "D. Tingkat efisiensi Pareteian yang optimal secara otomatis.",
+                    "E. Penerimaan pajak bagi pemerintah tanpa merusak keseimbangan."
+                ], answer: 1,
+                explanation: "Eksternalitas negatif membuat biaya swasta < biaya sosial. Akibatnya pasar memproduksi barang terlalu banyak (overproduction) dengan harga yang terlalu murah."
+            },
+            {
+                id: 18, category: "Ekonomi Mikro",
+                question: "Kebijakan pemerintah menetapkan Harga Eceran Tertinggi (Ceiling Price) di bawah harga keseimbangan pasar akan mengakibatkan...",
+                options: [
+                    "A. Keseimbangan baru dengan jumlah barang bertambah.",
+                    "B. Kelebihan penawaran (surplus barang).",
+                    "C. Kelebihan permintaan (shortage barang) dan timbulnya pasar gelap.",
+                    "D. Peningkatan surplus produsen secara signifikan.",
+                    "E. Hilangnya deadweight loss dari pasar."
+                ], answer: 2,
+                explanation: "Ceiling price di bawah harga pasar menyebabkan jumlah permintaan melonjak sementara penawaran menyusut, memicu kelebihan permintaan (shortage)."
+            },
+            {
+                id: 19, category: "Ekonomi Mikro",
+                question: "Jika pemerintah mengenakan pajak spesifik sebesar t per unit barang kepada produsen, maka beban pajak tersebut akan lebih banyak ditanggung oleh konsumen apabila...",
+                options: [
+                    "A. Permintaan bersifat sangat elastis dan penawaran inelastis.",
+                    "B. Permintaan bersifat sangat inelastis dan penawaran elastis.",
+                    "C. Elastisitas permintaan sama dengan elastisitas penawaran.",
+                    "D. Barang yang ditawarkan merupakan barang mewah.",
+                    "E. Kurva penawaran berbentuk horizontal sempurna."
+                ], answer: 1,
+                explanation: "Sisi pasar yang lebih inelastis (kurang sensitif terhadap perubahan harga) akan menanggung beban pajak yang lebih besar. Jadi jika permintaan inelastis, konsumen menanggung beban pajak lebih banyak."
+            },
+            {
+                id: 20, category: "Ekonomi Mikro",
+                question: "Surplus konsumen dapat diartikan sebagai...",
+                options: [
+                    "A. Selisih antara penerimaan total produsen dengan biaya total produksi.",
+                    "B. Keuntungan bersih yang diperoleh pemerintah dari pemungutan pajak.",
+                    "C. Selisih antara harga maksimum yang rela dibayar konsumen dengan harga yang sebenarnya dibayar di pasar.",
+                    "D. Selisih antara harga pasar dengan biaya marginal produsen.",
+                    "E. Jumlah barang sisa yang tidak terjual di pasar saat keseimbangan."
+                ], answer: 2,
+                explanation: "Surplus konsumen adalah manfaat bersih bagi pembeli, dihitung dari willingness to pay dikurangi harga aktual yang dibayarkan."
+            },
+            {
+                id: 21, category: "Ekonomi Mikro",
+                question: "Bila pendapatan seseorang naik sebesar 10% dan menyebabkan jumlah permintaan barang Z meningkat sebesar 15%, maka barang Z tergolong sebagai barang...",
+                options: ["A. Inferior", "B. Kebutuhan Pokok", "C. Mewah (Luks)", "D. Giffen", "E. Komplementer"],
+                answer: 2,
+                explanation: "Elastisitas pendapatan (Ey) = +15% / +10% = +1,5. Karena Ey > 1, barang Z dikategorikan sebagai barang mewah (luxury good)."
+            },
+            {
+                id: 22, category: "Ekonomi Mikro",
+                question: "Hukum Hasil Lebih yang Semakin Berkurang (The Law of Diminishing Returns) mulai berlaku dalam proses produksi jangka pendek pada saat...",
+                options: [
+                    "A. Produk Total (TP) mencapai nilai maksimum.",
+                    "B. Produk Rata-Rata (AP) mencapai nilai maksimum.",
+                    "C. Produk Marginal (MP) mulai menurun.",
+                    "D. Produk Marginal (MP) bernilai negatif.",
+                    "E. Biaya Total Rata-Rata (ATC) mencapai minimum."
+                ], answer: 2,
+                explanation: "Law of Diminishing Returns menyatakan bahwa penambahan satu unit input variabel secara terus menerus pada input tetap akan mulai menurunkan Produk Marginal (MP)."
+            },
+            {
+                id: 23, category: "Ekonomi Mikro",
+                question: "Di dalam Teori Perilaku Konsumen pendekatan Ordinal, Kurva Indiferensi (Indifference Curve) memiliki sifat-sifat berikut, KECUALI...",
+                options: [
+                    "A. Cembung ke arah titik origin (0,0).",
+                    "B. Memiliki kemiringan (slope) negatif.",
+                    "C. Kurva yang terletak lebih tinggi menunjukkan tingkat kepuasan yang lebih besar.",
+                    "D. Saling berpotongan satu sama lain untuk kombinasi barang berberda.",
+                    "E. Menunjukkan berbagai kombinasi konsumsi dua barang yang memberikan kepuasan sama."
+                ], answer: 3,
+                explanation: "Kurva indiferensi TIDAK BOLEH saling berpotongan karena akan melanggar aksioma konsistensi dan transitivitas preferensi konsumen."
+            },
+            {
+                id: 24, category: "Ekonomi Mikro",
+                question: "Jika dua barang A dan B memiliki elastisitas silang (cross-price elasticity) bernilai negatif (Exy < 0), hal ini menunjukkan bahwa barang A dan B adalah...",
+                options: ["A. Barang substitusi", "B. Barang komplementer", "C. Barang netral", "D. Barang superior", "E. Barang Giffen"],
+                answer: 1,
+                explanation: "Nilai elastisitas silang negatif menunjukkan bahwa kenaikan harga barang A menurunkan jumlah permintaan barang B, yang merupakan ciri hubungan komplementer (pelengkap)."
+            },
+            {
+                id: 25, category: "Ekonomi Mikro",
+                question: "Sebuah perusahaan monopoli yang menerapkan Diskriminasi Harga Derajat Pertama (Perfect Price Discrimination) akan menghasilkan...",
+                options: [
+                    "A. Kerugian mati (deadweight loss) yang sangat besar.",
+                    "B. Surplus konsumen yang maksimum.",
+                    "C. Hilangnya seluruh surplus konsumen karena diserap menjadi surplus produsen.",
+                    "D. Tingkat produksi yang lebih rendah dibanding monopoli biasa.",
+                    "E. Harga tunggal untuk seluruh kelompok konsumen."
+                ], answer: 2,
+                explanation: "Diskriminasi harga derajat pertama menetapkan harga sesuai batas maksimum willingness to pay tiap individu, sehingga mengkonversi seluruh surplus konsumen menjadi surplus produsen."
+            },
+            {
+                id: 26, category: "Ekonomi Mikro",
+                question: "Kondisi di mana produsen tidak dapat lagi meningkatkan produksi suatu barang tanpa mengurangi produksi barang lain disebut...",
+                options: [
+                    "A. Efisiensi Alokatif",
+                    "B. Efisiensi Produksi (Teknis)",
+                    "C. Keseimbangan Nash",
+                    "D. Optimalitas Pareto",
+                    "E. Skala Hasil Konstan"
+                ], answer: 1,
+                explanation: "Efisiensi produksi/teknis tercapai jika output diproduksi pada biaya terendah dan berada tepat di sepanjang garis kurva PPF (tidak bisa menambah 1 barang tanpa mengorbankan barang lain)."
+            },
+            {
+                id: 27, category: "Ekonomi Mikro",
+                question: "Bentuk kurva penawaran tenaga kerja individu yang membengkok ke belakang (backward-bending supply curve of labor) terjadi karena...",
+                options: [
+                    "A. Efek substitusi lebih besar dari efek pendapatan pada tingkat upah tinggi.",
+                    "B. Efek pendapatan lebih besar dari efek substitusi pada tingkat upah sangat tinggi.",
+                    "C. Tenaga kerja mengalami penurunan produktivitas marginal secara drastis.",
+                    "D. Pemerintah menetapkan upah minimum provinsi (UMP).",
+                    "E. Kenaikan tingkat bunga menurunkan hasrat bekerja."
+                ], answer: 1,
+                explanation: "Pada tingkat upah yang sangat tinggi, efek pendapatan memicu pekerja memilih lebih banyak waktu luang (leisure) dibanding bekerja, sehingga efek pendapatan mendominasi efek substitusi."
+            },
+            {
+                id: 28, category: "Ekonomi Mikro",
+                question: "Konsep Teori Permainan (Game Theory) di mana masing-masing pemain memilih strategi terbaiknya berdasarkan strategi yang dipilih oleh lawan dinamakan...",
+                options: [
+                    "A. Dominant Strategy Equilibrium",
+                    "B. Nash Equilibrium",
+                    "C. Pareto Optimum",
+                    "D. Cartel Collusion",
+                    "E. Zero-Sum Outcome"
+                ], answer: 1,
+                explanation: "Keseimbangan Nash (Nash Equilibrium) terjadi ketika tidak ada pemain yang memiliki insentif untuk mengubah strateginya secara sepihak setelah mempertimbangkan strategi lawan."
+            },
+            {
+                id: 29, category: "Ekonomi Mikro",
+                question: "Indeks Herfindahl-Hirschman (HHI) digunakan oleh lembaga pengawas persaingan usaha untuk mengukur...",
+                options: [
+                    "A. Tingkat ketimpangan pendapatan penduduk.",
+                    "B. Tingkat konsentrasi industri/pasar.",
+                    "C. Elastisitas penawaran barang manufaktur.",
+                    "D. Efisiensi penggunaan input modal.",
+                    "E. Besarnya kerugian bobot mati akibat pajak."
+                ], answer: 1,
+                explanation: "Indeks HHI dihitung dari penjumlahan kuadrat pangsa pasar seluruh perusahaan dalam industri untuk mengukur tingkat konsentrasi pasar atau kekuatan monopoli/oligopoli."
+            },
+            {
+                id: 30, category: "Ekonomi Mikro",
+                question: "Jika fungsi kepuasan total konsumen adalah TU = 20X - X², maka kepuasan maksimum akan tercapai saat mengonsumsi X sebanyak...",
+                options: ["A. 5 unit", "B. 10 unit", "C. 15 unit", "D. 20 unit", "E. 40 unit"],
+                answer: 1,
+                explanation: "Kepuasan maksimum tercapai saat MU = d(TU)/dX = 0. Jadi 20 - 2X = 0 => 2X = 20 => X = 10 unit."
+            },
+
+            // MAKROEKONOMI (31-50)
+            {
+                id: 31, category: "Ekonomi Makro",
+                question: "Perhatikan kurva Keseimbangan Makroekonomi Model AD-AS berikut:<br>Pergeseran kurva Aggregate Demand dari AD1 ke AD2 yang menyebabkan inflasi dorongan biaya (demand-pull inflation) disebabkan oleh...",
+                svg: `<svg width="240" height="150" viewBox="0 0 240 150" class="border rounded bg-white"><line x1="30" y1="120" x2="220" y2="120" stroke="black"/><line x1="30" y1="120" x2="30" y2="10" stroke="black"/><line x1="50" y1="20" x2="180" y2="110" stroke="red" stroke-width="1.5"/><text x="185" y="115" font-size="9">AD1</text><line x1="90" y1="20" x2="210" y2="100" stroke="red" stroke-width="1.5"/><text x="215" y="105" font-size="9">AD2</text><line x1="40" y1="110" x2="170" y2="20" stroke="blue" stroke-width="1.5"/><text x="175" y="25" font-size="9">SRAS</text><text x="110" y="140" font-size="9">PDB Riil (Y)</text><text x="5" y="60" font-size="9" transform="rotate(-90 15,60)">Tingkat Harga (P)</text></svg>`,
+                options: [
+                    "A. Kenaikan tarif pajak perseroan dan pemotongan belanja pemerintah.",
+                    "B. Peningkatan pengeluaran konsumsi masyarakat dan ekspansi investasi swasta.",
+                    "C. Kenaikan harga minyak mentah dunia secara signifikan.",
+                    "D. Penurunan jumlah uang beredar oleh Bank Central.",
+                    "E. Bencana alam yang merusak fasilitas infrastruktur nasional."
+                ], answer: 1,
+                explanation: "Pergeseran kurva AD ke kanan (AD1 ke AD2) memicu Demand-Pull Inflation, disebabkan oleh lonjakan komponen permintaan agregat seperti konsumsi (C), investasi (I), belanja negara (G), atau ekspor bersih (NX)."
+            },
+            {
+                id: 32, category: "Ekonomi Makro",
+                question: "Manakah dari transaksi berikut yang dihitung ke dalam Produk Domestik Bruto (PDB) Indonesia tahun berjalan?",
+                options: [
+                    "A. Pembelian saham PT Telkom Indonesia di Bursa Efek Indonesia oleh investor domestik.",
+                    "B. Pembayaran uang pensiun bulanan oleh pemerintah kepada purnawirawan PNS.",
+                    "C. Nilai penjualan mobil bekas keluaran tahun 2018 di showroom kendaraan.",
+                    "D. Gaji yang diterima oleh warga negara asing (WNA) yang bekerja sebagai tenaga ahli di Pekanbaru.",
+                    "E. Pembelian barang perantara (intermediate goods) oleh pabrik pengolahan."
+                ], answer: 3,
+                explanation: "PDB (GDP) mengukur nilai barang/jasa akhir yang diproduksi DI DALAM wilayah suatu negara dalam periode tertentu, tanpa memandang kewarganegaraan pembuatnya."
+            },
+            {
+                id: 33, category: "Ekonomi Makro",
+                question: "Jika PDB Nominal Indonesia tahun 2025 adalah Rp22.000 Triliun dan PDB Riil adalah Rp16.000 Triliun, berapakah besarnya nilai Deflator PDB?",
+                options: ["A. 72,7", "B. 137,5", "C. 125,0", "D. 60,0", "E. 150,0"],
+                answer: 1,
+                explanation: "Deflator PDB = (PDB Nominal / PDB Riil) * 100 = (22.000 / 16.000) * 100 = 137,5."
+            },
+            {
+                id: 34, category: "Ekonomi Makro",
+                question: "Diketahui fungsi konsumsi masyarakat suatu negara adalah C = 500 + 0,75Yd. Jika pemerintah menaikkan pajak agregat (T) sebesar Rp100 Triliun, maka pendapatan nasional ekivalen akan berkurang sebesar...",
+                options: ["A. Rp100 Triliun", "B. Rp300 Triliun", "C. Rp400 Triliun", "D. Rp500 Triliun", "E. Rp750 Triliun"],
+                answer: 1,
+                explanation: "Angka pengganda pajak (Tax Multiplier) = -MPC / (1 - MPC) = -0,75 / (1 - 0,75) = -3. Perubahan Y = -3 * Rp100T = -Rp300 Triliun."
+            },
+            {
+                id: 35, category: "Ekonomi Makro",
+                question: "Dalam model perekonomian terbuka 4 sektor, komponen yang merupakan penyuntikan (injection) ke dalam aliran pendapatan pusaran adalah...",
+                options: [
+                    "A. Tabungan (S), Pajak (T), dan Impor (M)",
+                    "B. Investasi (I), Belanja Pemerintah (G), dan Ekspor (X)",
+                    "C. Tabungan (S), Belanja Pemerintah (G), dan Impor (M)",
+                    "D. Konsumsi (C), Investasi (I), dan Pajak (T)",
+                    "E. Pajak (T), Ekspor (X), dan Impor (M)"
+                ], answer: 1,
+                explanation: "Injection (Suntikan) meliput Investasi (I), Government Expenditure (G), dan Export (X). Sedangkan Bocoran (Leakage) meliputi S, T, dan M."
+            },
+            {
+                id: 36, category: "Ekonomi Makro",
+                question: "Kebijakan Moneter Ekspansif yang dilakukan oleh Bank Sentral untuk mengatasi resesi ekonomi dapat dilakukan melalui...",
+                options: [
+                    "A. Menjual Surat Berharga Negara (SBN) di pasar terbuka.",
+                    "B. Menaikkan suku bunga diskonto (Discount Rate).",
+                    "C. Menaikkan Giro Wajib Minimum (GWM) perbankan.",
+                    "D. Membeli Surat Berharga Negara (SBN) di pasar sekunder.",
+                    "E. Memperketat syarat penyaluran kredit (Kredit Selektif)."
+                ], answer: 3,
+                explanation: "Membeli SBN menambah cadangan kas perbankan sehingga jumlah uang beredar bertambah dan suku bunga turun (Moneter Ekspansif)."
+            },
+            {
+                id: 37, category: "Ekonomi Makro",
+                question: "Kondisi Stagflasi di suatu negara ditandai oleh kombinasi fenomena makroekonomi yaitu...",
+                options: [
+                    "A. Pertumbuhan ekonomi tinggi disertai deflasi.",
+                    "B. Pertumbuhan ekonomi stagnan/lambat, pengangguran tinggi, dan inflasi tinggi.",
+                    "C. Suku bunga rendah, defisiti anggaran, dan apresiasi mata uang.",
+                    "D. Pengangguran rendah dan inflasi rendah.",
+                    "E. Surplus neraca pembayaran dan inflasi terkendali."
+                ], answer: 1,
+                explanation: "Stagflasi merupakan gabungan dari Stagnasi (ekonomi tidak tumbuh/pengangguran tinggi) dan Inflasi tinggi."
+            },
+            {
+                id: 38, category: "Ekonomi Makro",
+                question: "Pengangguran yang timbul akibat ketidakcocokan (mismatch) antara keterampilan pekerja dengan kualifikasi yang dibutuhkan oleh pemberi kerja disebut pengangguran...",
+                options: ["A. Friksional", "B. Siklis (Konjungtur)", "C. Struktural", "D. Musiman", "E. Voluntari"],
+                answer: 2,
+                explanation: "Pengangguran struktural terjadi karena perubahan struktur ekonomi atau teknologi yang menciptakan pergeseran kebutuhan keahlian."
+            },
+            {
+                id: 39, category: "Ekonomi Makro",
+                question: "Menurut teori Kuantitas Uang Irving Fisher (MV = PT), apabila jumlah uang beredar (M) naik sebesar 20% sementara kecepatan perputaran uang (V) dan volume output (T) konstan, maka...",
+                options: [
+                    "A. Tingkat harga (P) akan naik sebesar 20%.",
+                    "B. Tingkat harga (P) akan turun sebesar 20%.",
+                    "C. Output riil (T) akan naik 20%.",
+                    "D. Kecepatan uang (V) menyusut setengahnya.",
+                    "E. Tidak terjadi perubahan pada tingkat harga."
+                ], answer: 0,
+                explanation: "Dalam persamaan MV = PT, jika V dan T konstan, persentase perubahan M akan langsung proporsional dengan persentase perubahan P (inflasi 20%)."
+            },
+            {
+                id: 40, category: "Ekonomi Makro",
+                question: "Kurva Phillips jangka pendek menggambarkan hubungan negatif (trade-off) antara...",
+                options: [
+                    "A. Tingkat suku bunga dan tingkat investasi.",
+                    "B. Tingkat inflasi dan tingkat pengangguran.",
+                    "C. Pertumbuhan ekonomi dan ketimpangan pendapatan.",
+                    "D. Pajak dan penerimaan pemerintah.",
+                    "E. Nilai tukar dan neraca perdagangan."
+                ], answer: 1,
+                explanation: "Kurva Phillips menunjukkan trade-off jangka pendek: jika tingkat inflasi tinggi, maka tingkat pengangguran cenderung rendah, dan sebaliknya."
+            },
+            {
+                id: 41, category: "Ekonomi Makro",
+                question: "Tindakan pemerintah untuk menurunkan pengeluaran pembangunan dan menaikkan tarif pajak guna meredam pemanasan ekonomi (overheating) disebut kebijakan...",
+                options: [
+                    "A. Fiskal Ekspansif", "B. Moneter Ekspansif", "C. Fiskal Kontraktif", "D. Moneter Kontraktif", "E. Perdagangan Proteksionis"
+                ], answer: 2,
+                explanation: "Kebijakan fiskal kontraktif ditujukan untuk menekan permintaan agregat melalui pengurangan belanja negara (G) dan peningkatan pajak (T)."
+            },
+            {
+                id: 42, category: "Ekonomi Makro",
+                question: "Dalam catatan Neraca Pembayaran (Balance of Payments), ekspor barang dan jasa dicatat pada sisi...",
+                options: [
+                    "A. Kredit pada Transaksi Berjalan (Current Account)",
+                    "B. Debit pada Transaksi Modal (Capital Account)",
+                    "C. Kredit pada Transaksi Finansial (Financial Account)",
+                    "D. Debit pada Transaksi Berjalan (Current Account)",
+                    "E. Pos Selisih Perhitungan (Errors and Omissions)"
+                ], answer: 0,
+                explanation: "Ekspor menghasilkan aliran devisa masuk sehingga dicatat sebagai Kredit (+) pada Transaksi Berjalan (Current Account)."
+            },
+            {
+                id: 43, category: "Ekonomi Makro",
+                question: "Jika Rupiah mengalami Depresiasi terhadap Dolar AS (misal dari Rp15.000/$ menjadi Rp16.000/$), dampak langsung yang terjadi pada perdagangan internasional Indonesia adalah...",
+                options: [
+                    "A. Harga barang ekspor Indonesia menjadi lebih mahal bagi pembeli asing.",
+                    "B. Harga barang impor dari luar negeri menjadi lebih murah bagi konsumen domestik.",
+                    "C. Daya saing ekspor Indonesia meningkat karena harganya relatif lebih murah di luar negeri.",
+                    "D. Nilai impor Indonesia dipastikan melonjak drastis.",
+                    "E. Defisit neraca perdagangan Indonesia makin memburuk."
+                ], answer: 2,
+                explanation: "Depresiasi mata uang membuat harga barang dalam negeri relatif lebih murah bagi pembeli luar negeri, sehingga mendorong daya saing ekspor."
+            },
+            {
+                id: 44, category: "Ekonomi Makro",
+                question: "Teori Pertumbuhan Ekonomi Neo-Klasik dari Solow-Swan menekankan bahwa faktor utama penentu pertumbuhan ekonomi jangka panjang adalah...",
+                options: [
+                    "A. Akumulasi modal dan jumlah penduduk semata.",
+                    "B. Kemajuan teknologi eksogen (Technological Progress).",
+                    "C. Inovasi wirausahawan (Schumpeterian).",
+                    "D. Pengeluaran konsumsi masyarakat.",
+                    "E. Efisiensi sistem pasar persaingan sempurna."
+                ], answer: 1,
+                explanation: "Model Solow menunjukkan akumulasi modal saja akan membentur diminishing returns, sehingga pertumbuhan jangka panjang digerakkan oleh kemajuan teknologi."
+            },
+            {
+                id: 45, category: "Ekonomi Makro",
+                question: "Indikator yang paling umum digunakan untuk mengukur tingkat ketimpangan distribusi pendapatan penduduk suatu negara adalah...",
+                options: [
+                    "A. PDB Per Kapita dan Kurva IS-LM",
+                    "B. Koefisien Gini dan Kurva Lorenz",
+                    "C. Indeks Pembangunan Manusia (IPM)",
+                    "D. Tingkat Partisipasi Angkatan Kerja (TPAK)",
+                    "E. Deflator PDB dan IHHK"
+                ], answer: 1,
+                explanation: "Ketimpangan distribusi pendapatan diukur secara visual dengan Kurva Lorenz dan secara kuantitatif dengan Koefisien Gini (0 = merata sempurna, 1 = timpang sempurna)."
+            },
+            {
+                id: 46, category: "Ekonomi Makro",
+                question: "Motif memegang uang tunai menurut J.M. Keynes yang paling dipengaruhi oleh tingkat suku bunga adalah motif...",
+                options: ["A. Transaksi", "B. Berjaga-jaga", "C. Spekulasi", "D. Investasi Langsung", "E. Konsumsi"],
+                answer: 2,
+                explanation: "Permintaan uang untuk motif spekulasi berbanding terbalik dengan tingkat suku bunga (biaya peluang memegang uang tunai)."
+            },
+            {
+                id: 47, category: "Ekonomi Makro",
+                question: "Efek Crowding-Out (Crowding-Out Effect) terjadi ketika kebijakan fiskal ekspansif pemerintah melalui penambahan utang menyebabkan...",
+                options: [
+                    "A. Penurunan suku bunga dan peningkatan investasi swasta.",
+                    "B. Kenaikan suku bunga pasar yang menurunkan pengeluaran investasi swasta.",
+                    "C. Penurunan tingkat inflasi secara drastis.",
+                    "D. Peningkatan surplus anggaran belanja negara.",
+                    "E. Depresiasi tajam nilai tukar mata uang."
+                ], answer: 1,
+                explanation: "Pinjaman pemerintah yang besar menaikkan permintaan dana pinjaman (loanable funds), memicu kenaikan suku bunga yang lalu 'mendesak keluar' (crowd out) investasi swasta."
+            },
+            {
+                id: 48, category: "Ekonomi Makro",
+                question: "Manakah dari berikut yang termasuk dalam komponen Uang Kartal (Currency)?",
+                options: [
+                    "A. Uang kertas dan uang logam di tangan masyarakat umum.",
+                    "B. Simpanan giro di bank umum.",
+                    "C. Deposito berjangka dan tabungan (Quasi Money).",
+                    "D. Saldo e-wallet dan kartu kredit.",
+                    "E. Obligasi Pemerintah jangka pendek."
+                ], answer: 0,
+                explanation: "Uang kartal terdiri dari uang kertas dan uang logam yang secara sah beredar di masyarakat di luar sistem perbankan."
+            },
+            {
+                id: 49, category: "Ekonomi Makro",
+                question: "Teori Keunggulan Komparatif (Comparative Advantage) dari David Ricardo menyatakan bahwa perdagangan internasional akan tetap menguntungkan kedua negara selama...",
+                options: [
+                    "A. Salah satu negara memiliki keunggulan absolut pada semua jenis barang.",
+                    "B. Kedua negara memiliki perbedaan biaya relatif (opportunity cost) dalam memproduksi barang.",
+                    "C. Negara kaya memberikan subsidi bagi negara berkembang.",
+                    "D. Biaya transportasi antar negara bernilai nol.",
+                    "E. Nilai tukar mata uang kedua negara dikunci secara tetap (fixed rate)."
+                ], answer: 1,
+                explanation: "Perdagangan internasional saling menguntungkan jika setiap negara berspesialisasi pada barang yang memiliki biaya peluang (opportunity cost) lebih rendah."
+            },
+            {
+                id: 50, category: "Ekonomi Makro",
+                question: "Kebijakan stabilisasi makroekonomi otomatis (Automatic Stabilizers) bekerja tanpa perlu intervensi hukum baru dari pemerintah. Contoh alat stabilisator otomatis adalah...",
+                options: [
+                    "A. Pembentukan proyek infrastruktur baru saat resesi.",
+                    "B. Sistem Pajak Penghasilan Progresif dan Asuransi Pengangguran.",
+                    "C. Penetapan upah minimum regional tahunan.",
+                    "D. Pemotongan suku bunga oleh Bank Sentral.",
+                    "E. Pemberian bantuan hibah antar negara."
+                ], answer: 1,
+                explanation: "Pajak proporsional/progresif dan tunjangan sosial otomatis meredam gejolak konjungtur ekonomi tanpa memerlukan undang-undang kebijakan baru."
+            }
+        ];
+
+        // GLOBAL STATE VARIABLES
+        let currentQuestionIdx = 0;
+        let userAnswers = new Array(50).fill(null);
+        let userDoubts = new Array(50).fill(false);
+        let timerInterval = null;
+        let timeRemaining = 120 * 60; // 120 Menit dalam detik
+        let userData = { name: "", school: "" };
+
+        // Dummy data leaderboard untuk variasi
+        const dummyLeaderboard = [
+            { name: "Siti Rahmawati", school: "SMA Negeri 8 Jakarta", score: 185, correct: 47, wrong: 3, empty: 0 },
+            { name: "Andi Wijaya", school: "SMA Plus Riau", score: 172, correct: 44, wrong: 4, empty: 2 },
+            { name: "Fathur Rahman", school: "SMAN 3 Bandung", score: 160, correct: 42, wrong: 8, empty: 0 },
+            { name: "Dewi Lestari", school: "SMA MHP Surabaya", score: 148, correct: 39, wrong: 8, empty: 3 },
+            { name: "Rizky Pratama", school: "SMA IT Al-Ittihad", score: 135, correct: 36, wrong: 9, empty: 5 }
+        ];
+
+        // INITIALIZATION
+        function startExam(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('input-nama').value.trim();
+            const schoolInput = document.getElementById('input-sekolah').value.trim();
+
+            if (!nameInput || !schoolInput) return;
+
+            userData.name = nameInput;
+            userData.school = schoolInput;
+
+            document.getElementById('user-display-name').innerText = userData.name;
+            document.getElementById('user-display-school').innerText = userData.school;
+
+            document.getElementById('page-login').classList.add('hidden');
+            document.getElementById('page-exam').classList.remove('hidden');
+
+            renderNavGrid();
+            loadQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let mins = Math.floor(timeRemaining / 60);
+                let secs = timeRemaining % 60;
+                document.getElementById('timer-display').innerText = 
+                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        function renderNavGrid() {
+            const grid = document.getElementById('navigation-grid');
+            grid.innerHTML = "";
+
+            for (let i = 0; i < 50; i++) {
+                const btn = document.createElement('button');
+                btn.id = `nav-btn-${i}`;
+                btn.innerText = i + 1;
+                btn.className = `h-9 w-full rounded font-semibold text-xs transition border flex items-center justify-center ${getNavBtnColorClass(i)}`;
+                btn.onclick = () => loadQuestion(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function getNavBtnColorClass(idx) {
+            if (idx === currentQuestionIdx) {
+                return "border-2 border-ksr-blue text-ksr-blue font-bold shadow-sm";
+            }
+            if (userDoubts[idx]) {
+                return "bg-amber-400 text-white border-amber-500";
+            }
+            if (userAnswers[idx] !== null) {
+                return "bg-ksr-blue text-white border-ksr-blue";
+            }
+            return "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200";
+        }
+
+        function loadQuestion(idx) {
+            currentQuestionIdx = idx;
+            const q = questionsData[idx];
+
+            document.getElementById('question-category').innerText = q.category;
+            document.getElementById('question-number-title').innerText = `Soal No. ${idx + 1} dari 50`;
+            document.getElementById('question-text').innerHTML = q.question;
+            
+            const svgContainer = document.getElementById('question-svg-container');
+            svgContainer.innerHTML = q.svg ? q.svg : "";
+
+            // Load Options
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = "";
+
+            q.options.forEach((optText, optIdx) => {
+                const isSelected = userAnswers[idx] === optIdx;
+                const optBtn = document.createElement('div');
+                optBtn.className = `p-3.5 rounded-lg border transition cursor-pointer flex items-start space-x-3 text-sm ${
+                    isSelected ? 'border-ksr-blue bg-blue-50/60 font-medium text-ksr-blue' : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                }`;
+                optBtn.onclick = () => selectOption(optIdx);
+
+                optBtn.innerHTML = `
+                    <input type="radio" name="option" ${isSelected ? 'checked' : ''} class="mt-0.5 text-ksr-blue focus:ring-ksr-blue pointer-events-none">
+                    <span class="leading-relaxed">${optText}</span>
+                `;
+                optsContainer.appendChild(optBtn);
+            });
+
+            // Update Doubt Checkbox
+            document.getElementById('checkbox-doubt').checked = userDoubts[idx];
+
+            // Prev/Next buttons
+            document.getElementById('btn-prev').disabled = (idx === 0);
+            document.getElementById('btn-next').innerText = (idx === 49) ? "Selesai" : "Selanjutnya →";
+
+            updateNavGridStyles();
+        }
+
+        function selectOption(optIdx) {
+            if (userAnswers[currentQuestionIdx] === optIdx) {
+                userAnswers[currentQuestionIdx] = null; // Uncheck jika diklik ulang
+            } else {
+                userAnswers[currentQuestionIdx] = optIdx;
+            }
+            loadQuestion(currentQuestionIdx);
+        }
+
+        function toggleDoubt() {
+            userDoubts[currentQuestionIdx] = !userDoubts[currentQuestionIdx];
+            document.getElementById('checkbox-doubt').checked = userDoubts[currentQuestionIdx];
+            updateNavGridStyles();
+        }
+
+        function updateNavGridStyles() {
+            for (let i = 0; i < 50; i++) {
+                const btn = document.getElementById(`nav-btn-${i}`);
+                if (btn) {
+                    btn.className = `h-9 w-full rounded font-semibold text-xs transition border flex items-center justify-center ${getNavBtnColorClass(i)}`;
+                }
+            }
+        }
+
+        function navigateQuestion(direction) {
+            const target = currentQuestionIdx + direction;
+            if (target >= 0 && target < 50) {
+                loadQuestion(target);
+            } else if (target === 50) {
+                confirmFinishExam();
+            }
+        }
+
+        function confirmFinishExam() {
+            document.getElementById('modal-finish').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-finish').classList.add('hidden');
+        }
+
+        function finishExam() {
+            clearInterval(timerInterval);
+            closeModal();
+
+            document.getElementById('page-exam').classList.add('hidden');
+            document.getElementById('page-result').classList.remove('hidden');
+
+            calculateAndDisplayResults();
+        }
+
+        function calculateAndDisplayResults() {
+            let correctCount = 0;
+            let wrongCount = 0;
+            let emptyCount = 0;
+
+            let microCorrect = 0;
+            let macroCorrect = 0;
+
+            questionsData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                if (userAns === null) {
+                    emptyCount++;
+                } else if (userAns === q.answer) {
+                    correctCount++;
+                    if (idx < 30) microCorrect++;
+                    else macroCorrect++;
+                } else {
+                    wrongCount++;
+                }
+            });
+
+            const totalScore = (correctCount * 4) + (wrongCount * -1);
+
+            // Populate Summary
+            document.getElementById('result-user-name').innerText = userData.name;
+            document.getElementById('result-user-school').innerText = userData.school;
+            document.getElementById('res-score').innerText = totalScore;
+            document.getElementById('res-correct').innerText = correctCount;
+            document.getElementById('res-wrong').innerText = wrongCount;
+            document.getElementById('res-empty').innerText = emptyCount;
+
+            // Diagnostic Bars
+            const microPct = Math.round((microCorrect / 30) * 100);
+            const macroPct = Math.round((macroCorrect / 20) * 100);
+
+            document.getElementById('micro-pct').innerText = `${microPct}%`;
+            document.getElementById('micro-bar').style.width = `${microPct}%`;
+            document.getElementById('micro-detail').innerText = `${microCorrect} dari 30 soal benar`;
+
+            document.getElementById('macro-pct').innerText = `${macroPct}%`;
+            document.getElementById('macro-bar').style.width = `${macroPct}%`;
+            document.getElementById('macro-detail').innerText = `${macroCorrect} dari 20 soal benar`;
+
+            // Build Leaderboard
+            buildLeaderboard(totalScore, correctCount, wrongCount, emptyCount);
+
+            // Build Discussion
+            buildDiscussion();
+        }
+
+        function buildLeaderboard(userScore, userCorrect, userWrong, userEmpty) {
+            let boardList = [...dummyLeaderboard];
+            boardList.push({
+                name: userData.name,
+                school: userData.school,
+                score: userScore,
+                correct: userCorrect,
+                wrong: userWrong,
+                empty: userEmpty,
+                isCurrent: true
+            });
+
+            // Sort Descending by Score
+            boardList.sort((a, b) => b.score - a.score);
+
+            const tbody = document.getElementById('leaderboard-tbody');
+            tbody.innerHTML = "";
+
+            boardList.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = item.isCurrent ? "bg-blue-50 font-semibold" : "hover:bg-gray-50";
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-gray-700">#${index + 1}</td>
+                    <td class="py-3 px-4 ${item.isCurrent ? 'text-ksr-blue' : 'text-gray-800'}">${item.name} ${item.isCurrent ? '(Anda)' : ''}</td>
+                    <td class="py-3 px-4 text-gray-600">${item.school}</td>
+                    <td class="py-3 px-4 text-center font-bold text-ksr-blue">${item.score}</td>
+                    <td class="py-3 px-4 text-center text-emerald-600 font-medium">${item.correct}</td>
+                    <td class="py-3 px-4 text-center text-rose-600 font-medium">${item.wrong}</td>
+                    <td class="py-3 px-4 text-center text-gray-400">${item.empty}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function buildDiscussion() {
+            const container = document.getElementById('discussion-container');
+            container.innerHTML = "";
+
+            questionsData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = (userAns === q.answer);
+                const isUnanswered = (userAns === null);
+
+                let statusBadge = "";
+                if (isUnanswered) {
+                    statusBadge = `<span class="bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded text-xs font-bold">Tidak Dijawab</span>`;
+                } else if (isCorrect) {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded text-xs font-bold">Benar (+4)</span>`;
+                } else {
+                    statusBadge = `<span class="bg-rose-100 text-rose-700 px-2.5 py-0.5 rounded text-xs font-bold">Salah (-1)</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = "p-4 border rounded-xl bg-gray-50/50 space-y-3";
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-ksr-blue uppercase">${q.category} - Soal #${idx + 1}</span>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-sm font-medium text-gray-800 leading-relaxed">${q.question}</p>
+                    ${q.svg ? `<div class="my-2">${q.svg}</div>` : ''}
+                    <div class="text-xs space-y-1 bg-white p-3 rounded-lg border border-gray-200">
+                        <p class="text-gray-600"><strong>Jawaban Anda:</strong> ${userAns !== null ? q.options[userAns] : '<em class="text-gray-400">Kosong</em>'}</p>
+                        <p class="text-emerald-700 font-semibold"><strong>Kunci Jawaban:</strong> ${q.options[q.answer]}</p>
+                    </div>
+                    <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-lg text-xs text-blue-900 leading-relaxed">
+                        <strong>Pembahasan:</strong> ${q.explanation}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
