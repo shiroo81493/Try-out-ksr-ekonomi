@@ -6,137 +6,240 @@
   <title>Try Out KSR - Bidang Ekonomi</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
 
   <!-- Header / Navbar -->
-  <header class="bg-indigo-700 text-white shadow-lg p-4 sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold tracking-wide">Try Out KSR - Ekonomi</h1>
-      <div id="timer-box" class="hidden text-sm md:text-base font-semibold bg-indigo-800 px-3 py-1.5 rounded-lg border border-indigo-500">
-        ⏱️ Sisa Waktu: <span id="timer-display" class="text-amber-300">120:00</span>
+  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-50 border-b border-indigo-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-inner">
+          <i data-lucide="book-open-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-wide leading-tight sm:text-lg">Try Out KSR</h1>
+          <p class="text-xs text-indigo-300 font-medium">Bidang Studi Ekonomi</p>
+        </div>
+      </div>
+
+      <!-- Timer Display (Hanya saat ujian) -->
+      <div id="timer-box" class="hidden flex items-center gap-2 bg-indigo-950/80 px-4 py-2 rounded-xl border border-indigo-700/50 shadow-inner">
+        <i data-lucide="timer" class="w-4 h-4 text-amber-400 animate-pulse"></i>
+        <span class="text-xs text-indigo-200 font-medium hidden sm:inline">Sisa Waktu:</span>
+        <span id="timer-display" class="font-mono font-bold text-amber-300 text-sm sm:text-base tracking-wider">120:00</span>
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="max-w-6xl mx-auto w-full p-4 flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex-grow flex flex-col justify-center">
 
-    <!-- Screen 1: Identitas / Form Masuk -->
-    <section id="screen-start" class="md:col-span-3 max-w-xl mx-auto w-full bg-white p-6 md:p-8 rounded-2xl shadow-md my-auto">
-      <h2 class="text-2xl font-bold text-center text-indigo-900 mb-2">Simulasi Try Out Ekonomi</h2>
-      <p class="text-slate-600 text-center text-sm mb-6">Persiapan Kompetisi / Olimpiade Ekonomi. Isilah identitas Anda untuk memulai.</p>
-      
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold mb-1 text-slate-700">Nama Lengkap</label>
-          <input type="text" id="input-nama" placeholder="Masukkan nama Anda..." class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-        </div>
-        <div>
-          <label class="block text-sm font-semibold mb-1 text-slate-700">Asal Sekolah / Instansi</label>
-          <input type="text" id="input-sekolah" placeholder="Contoh: SMA IT Al Ittihad" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-        </div>
-        <button onclick="mulaiUjian()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all">
-          🚀 Mulai Ujian Sekarang
-        </button>
-      </div>
+    <!-- SCREEN 1: Identitas / Landing Page -->
+    <section id="screen-start" class="max-w-2xl mx-auto w-full my-auto space-y-6">
+      <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 text-center relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-indigo-50 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-50 rounded-full blur-2xl pointer-events-none"></div>
 
-      <!-- Realtime Leaderboard di Halaman Depan -->
-      <div class="mt-8 pt-6 border-t">
-        <h3 class="font-bold text-lg text-slate-800 mb-3 flex items-center gap-2">
-          🏆 Top 10 Papan Peringkat (Leaderboard)
-        </h3>
-        <div id="leaderboard-start" class="space-y-2 text-sm text-slate-600">
-          <p class="animate-pulse">Memuat data peringkat...</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Screen 2: Tampilan Soal & Lembar Ujian -->
-    <section id="screen-exam" class="hidden md:col-span-2 space-y-4">
-      <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
-        <div class="flex justify-between items-center mb-4 border-b pb-3">
-          <span id="soal-number" class="font-bold text-indigo-700 text-lg">Soal Nomor 1</span>
-          <span id="soal-kategori" class="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full">Mikroekonomi</span>
+        <div class="inline-flex p-3 bg-indigo-50 rounded-2xl text-indigo-600 mb-4">
+          <i data-lucide="trophy" class="w-8 h-8"></i>
         </div>
 
-        <!-- Teks Soal -->
-        <div id="soal-text" class="text-slate-800 text-base leading-relaxed mb-6"></div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Simulasi Try Out Ekonomi</h2>
+        <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Uji kesiapan kompetisi ekonomi kamu dengan sistem penilaian otomatis dan papan peringkat real-time.</p>
 
-        <!-- Pilihan Jawaban -->
-        <div id="options-container" class="space-y-3"></div>
-      </div>
-
-      <!-- Tombol Navigasi Soal -->
-      <div class="flex justify-between items-center gap-2 bg-white p-4 rounded-2xl shadow-md">
-        <button onclick="prevSoal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 font-semibold rounded-xl text-slate-700">
-          ← Sebelumnya
-        </button>
-        <button onclick="toggleRagu()" id="btn-ragu" class="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-xl">
-          ❓ Ragu-ragu
-        </button>
-        <button onclick="nextSoal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl">
-          Selanjutnya →
-        </button>
-      </div>
-    </section>
-
-    <!-- Sidebar Nomor Soal & Selesai -->
-    <section id="screen-sidebar" class="hidden md:col-span-1 space-y-4">
-      <div class="bg-white p-5 rounded-2xl shadow-md">
-        <h3 class="font-bold text-slate-800 mb-3 border-b pb-2">Navigasi Soal</h3>
-        <div id="grid-nomor" class="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1"></div>
-        
-        <div class="mt-6 pt-4 border-t space-y-2">
-          <div class="flex items-center text-xs text-slate-600 gap-2">
-            <span class="w-3 h-3 bg-indigo-600 rounded"></span> Dijawab
-            <span class="w-3 h-3 bg-amber-400 rounded"></span> Ragu-ragu
-            <span class="w-3 h-3 bg-slate-200 rounded"></span> Belum
+        <form onsubmit="event.preventDefault(); mulaiUjian();" class="mt-8 space-y-4 text-left max-w-md mx-auto">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap Peserta</label>
+            <div class="relative">
+              <i data-lucide="user" class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="input-nama" required placeholder="Contoh: Asyrof Alhatim" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+            </div>
           </div>
-          <button onclick="konfirmasiSelesai()" class="w-full mt-3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">
-            ✅ Selesaikan Ujian
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Asal Sekolah / Instansi</label>
+            <div class="relative">
+              <i data-lucide="building-2" class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="input-sekolah" required placeholder="Contoh: SMA IT Al Ittihad" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm mt-2">
+            <span>Mulai Pengerjaan Ujian</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+        <!-- Preview Leaderboard Top 10 di Halaman Depan -->
+        <div class="mt-10 pt-8 border-t border-slate-100 text-left">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+              <i data-lucide="medal" class="w-4 h-4 text-amber-500"></i>
+              Top 10 Papan Peringkat Real-time
+            </h3>
+            <span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">Live Firestore</span>
+          </div>
+          <div id="leaderboard-start" class="space-y-2">
+            <div class="text-center py-6 text-xs text-slate-400 animate-pulse">Memuat data peringkat...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: Ruang Ujian (Soal + Navigasi) -->
+    <div id="screen-exam" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6 my-auto">
+      
+      <!-- Box Soal (Kiri/Utama) -->
+      <section class="lg:col-span-2 space-y-4 flex flex-col justify-between">
+        <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80 min-h-[420px] flex flex-col justify-between">
+          <div>
+            <!-- Header Soal -->
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span id="soal-number" class="text-lg font-black text-indigo-600">Soal #1</span>
+                <span class="text-slate-300">|</span>
+                <span id="soal-kategori" class="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">Ekonomi</span>
+              </div>
+              <span class="text-xs font-medium text-slate-400">Pilihan Ganda</span>
+            </div>
+
+            <!-- Teks Soal -->
+            <div id="soal-text" class="text-slate-800 text-sm sm:text-base leading-relaxed font-normal mb-8">
+              <!-- Soal diinjeksi via JS -->
+            </div>
+
+            <!-- Opsi Jawaban -->
+            <div id="options-container" class="space-y-3">
+              <!-- Opsi diinjeksi via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Bawah Navigasi -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between gap-2">
+          <button onclick="prevSoal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-all flex items-center gap-1.5">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            <span>Sebelumnya</span>
+          </button>
+
+          <button onclick="toggleRagu()" id="btn-ragu" class="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/80 text-xs sm:text-sm font-semibold rounded-xl transition-all flex items-center gap-1.5">
+            <i data-lucide="help-circle" class="w-4 h-4"></i>
+            <span>Ragu-Ragu</span>
+          </button>
+
+          <button onclick="nextSoal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md shadow-indigo-100 transition-all flex items-center gap-1.5">
+            <span>Selanjutnya</span>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- Sidebar Nomor Soal (Kanan) -->
+      <aside class="lg:col-span-1 space-y-4">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
+          <h3 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2 border-b pb-3 border-slate-100">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-indigo-600"></i>
+            Navigasi Nomor Soal
+          </h3>
+
+          <!-- Grid Nomor -->
+          <div id="grid-nomor" class="grid grid-cols-5 gap-2 max-h-64 sm:max-h-80 overflow-y-auto custom-scrollbar p-1">
+            <!-- Diinjeksi via JS -->
+          </div>
+
+          <!-- Keterangan Warna -->
+          <div class="mt-6 pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-500">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 bg-indigo-600 rounded-md"></span>
+              <span>Sudah Dijawab</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 bg-amber-400 rounded-md"></span>
+              <span>Ragu-Ragu</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 bg-slate-100 border border-slate-300 rounded-md"></span>
+              <span>Belum Dijawab</span>
+            </div>
+          </div>
+
+          <button onclick="konfirmasiSelesai()" class="w-full mt-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-100 transition-all text-sm flex items-center justify-center gap-2">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span>Selesaikan Ujian</span>
+          </button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- SCREEN 3: Hasil & Review -->
+    <section id="screen-result" class="hidden max-w-3xl mx-auto w-full my-auto space-y-6">
+      <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 text-center">
+        
+        <div class="inline-flex p-4 bg-emerald-50 text-emerald-600 rounded-3xl mb-4">
+          <i data-lucide="award" class="w-10 h-10"></i>
+        </div>
+
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Ujian Telah Selesai! 🎉</h2>
+        <p class="text-slate-500 text-sm mt-1">Hasil perolehan nilai Anda telah dicatat ke database leaderboard.</p>
+
+        <!-- Stat Card -->
+        <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-6 rounded-2xl shadow-lg shadow-indigo-100 my-6 max-w-sm mx-auto">
+          <span class="text-xs font-medium tracking-wider uppercase opacity-80">Skor Akhir Anda</span>
+          <p id="total-skor" class="text-5xl font-black my-1">0</p>
+          <p id="detail-jawaban-stat" class="text-xs opacity-90">Benar: 0 | Salah: 0 | Kosong: 0</p>
+        </div>
+
+        <!-- Leaderboard Terbaru -->
+        <div class="text-left bg-slate-50 p-5 rounded-2xl border border-slate-200/60 mb-6">
+          <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2">
+            <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i>
+            Papan Peringkat Terbaru
+          </h3>
+          <div id="leaderboard-result" class="space-y-2">
+            <div class="text-center py-4 text-xs text-slate-400">Memuat peringkat terbaru...</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-center gap-3">
+          <button onclick="location.reload()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span>Ulangi Ujian</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Screen 3: Hasil & Pembahasan -->
-    <section id="screen-result" class="hidden md:col-span-3 max-w-3xl mx-auto w-full bg-white p-6 md:p-8 rounded-2xl shadow-md">
-      <div class="text-center space-y-2 mb-8">
-        <h2 class="text-3xl font-extrabold text-indigo-900">Ujian Selesai! 🎉</h2>
-        <p class="text-slate-600">Terima kasih telah menyelesaikan Try Out Ekonomi ini.</p>
-        <div class="inline-block bg-indigo-50 border border-indigo-200 rounded-2xl p-6 my-4">
-          <p class="text-sm font-semibold text-indigo-600 uppercase tracking-wider">Skor Akhir Anda</p>
-          <p id="total-skor" class="text-5xl font-black text-indigo-700 my-1">0</p>
-          <p id="detail-jawaban-stat" class="text-xs text-slate-500">Benar: 0 | Salah: 0 | Kosong: 0</p>
-        </div>
-      </div>
-
-      <!-- Realtime Leaderboard -->
-      <div class="mb-8 bg-slate-50 p-5 rounded-xl border">
-        <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
-          🏆 Papan Peringkat Terbaru
-        </h3>
-        <div id="leaderboard-result" class="space-y-2 text-sm">
-          <p class="animate-pulse">Memuat peringkat terbaru...</p>
-        </div>
-      </div>
-
-      <div class="text-center">
-        <button onclick="location.reload()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl">
-          🔄 Coba Ujian Lagi
-        </button>
-      </div>
-    </section>
-
   </main>
 
-  <!-- Firebase Script SDK -->
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200/60 py-4 text-center text-xs text-slate-400">
+    <p>© 2026 Try Out KSR - Portal Ujian Ekonomi Online</p>
+  </footer>
+
+  <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Configuration Firebase Terpasang
+    // Configuration Firebase Terpasang Milikmu
     const firebaseConfig = {
       apiKey: "AIzaSyAE7qZ7bLd7LxJnmGgQIEheVjXN4IiUt8U",
       authDomain: "try-out-ksr.firebaseapp.com",
@@ -147,11 +250,11 @@
       measurementId: "G-PTJ9HSREZD"
     };
 
-    // Inisialisasi Firebase
+    // Inisialisasi Firebase & Firestore
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Fungsi Global Simpan Nilai ke Firestore
+    // Function Simpan Skor
     window.simpanSkorKeFirebase = async function(nama, sekolah, skor) {
       try {
         await addDoc(collection(db, "leaderboard"), {
@@ -167,7 +270,7 @@
       }
     };
 
-    // Fungsi Global Load Leaderboard dari Firestore
+    // Function Load Leaderboard
     window.muatLeaderboard = async function() {
       try {
         const q = query(collection(db, "leaderboard"), orderBy("skor", "desc"), limit(10));
@@ -177,20 +280,20 @@
         let rank = 1;
 
         if (querySnapshot.empty) {
-          htmlData = "<p class='text-slate-400 italic text-center py-4'>Belum ada data peringkat. Jadilah yang pertama!</p>";
+          htmlData = "<p class='text-slate-400 italic text-center py-4 text-xs'>Belum ada data peringkat. Jadilah yang pertama!</p>";
         } else {
           querySnapshot.forEach((doc) => {
             const data = doc.data();
             htmlData += `
-              <div class="flex justify-between items-center py-2 px-3 bg-white rounded-lg shadow-sm border border-slate-100 mb-1.5">
+              <div class="flex justify-between items-center py-2.5 px-3.5 bg-white rounded-xl border border-slate-100 shadow-sm mb-1.5">
                 <div class="flex items-center gap-3">
-                  <span class="font-bold text-sm text-indigo-600 w-6">#${rank++}</span>
+                  <span class="font-black text-xs ${rank === 1 ? 'text-amber-500' : rank === 2 ? 'text-slate-400' : rank === 3 ? 'text-amber-700' : 'text-slate-400'} w-5">#${rank++}</span>
                   <div>
-                    <p class="font-semibold text-slate-800 text-sm leading-tight">${data.nama || 'Anonim'}</p>
-                    <p class="text-xs text-slate-400">${data.sekolah || '-'}</p>
+                    <p class="font-bold text-slate-800 text-xs leading-tight">${data.nama || 'Anonim'}</p>
+                    <p class="text-[10px] text-slate-400">${data.sekolah || '-'}</p>
                   </div>
                 </div>
-                <span class="font-black text-indigo-700 text-sm">${data.skor} Pts</span>
+                <span class="font-extrabold text-indigo-600 text-xs">${data.skor} Pts</span>
               </div>
             `;
           });
@@ -206,76 +309,35 @@
       }
     };
 
-    window.addEventListener("DOMContentLoaded", window.muatLeaderboard);
+    window.addEventListener("DOMContentLoaded", () => {
+      window.muatLeaderboard();
+      lucide.createIcons();
+    });
   </script>
 
-  <!-- Aplikasi Logic JavaScript -->
+  <!-- Application Engine Script -->
   <script>
-    // Array 50 Soal Ekonomi
-    const daftarSoal = [
-      { kategori: "Mikroekonomi", soal: "1. Teks soal nomor 1 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "2. Teks soal nomor 2 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "3. Teks soal nomor 3 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "4. Teks soal nomor 4 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "5. Teks soal nomor 5 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "6. Teks soal nomor 6 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "7. Teks soal nomor 7 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "8. Teks soal nomor 8 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "9. Teks soal nomor 9 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "10. Teks soal nomor 10 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "11. Teks soal nomor 11 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "12. Teks soal nomor 12 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "13. Teks soal nomor 13 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "14. Teks soal nomor 14 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Mikroekonomi", soal: "15. Teks soal nomor 15 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "16. Teks soal nomor 16 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "17. Teks soal nomor 17 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "18. Teks soal nomor 18 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "19. Teks soal nomor 19 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "20. Teks soal nomor 20 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "21. Teks soal nomor 21 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "22. Teks soal nomor 22 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "23. Teks soal nomor 23 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "24. Teks soal nomor 24 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Makroekonomi", soal: "25. Teks soal nomor 25 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "26. Teks soal nomor 26 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "27. Teks soal nomor 27 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "28. Teks soal nomor 28 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "29. Teks soal nomor 29 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "30. Teks soal nomor 30 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "31. Teks soal nomor 31 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "32. Teks soal nomor 32 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "33. Teks soal nomor 33 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "34. Teks soal nomor 34 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Keuangan & Akuntansi", soal: "35. Teks soal nomor 35 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "36. Teks soal nomor 36 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "37. Teks soal nomor 37 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "38. Teks soal nomor 38 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "39. Teks soal nomor 39 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "40. Teks soal nomor 40 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "41. Teks soal nomor 41 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "42. Teks soal nomor 42 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "43. Teks soal nomor 43 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "44. Teks soal nomor 44 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Ekonomi Internasional", soal: "45. Teks soal nomor 45 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Kebijakan Moneter & Fiskal", soal: "46. Teks soal nomor 46 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Kebijakan Moneter & Fiskal", soal: "47. Teks soal nomor 47 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Kebijakan Moneter & Fiskal", soal: "48. Teks soal nomor 48 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Kebijakan Moneter & Fiskal", soal: "49. Teks soal nomor 49 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 },
-      { kategori: "Kebijakan Moneter & Fiskal", soal: "50. Teks soal nomor 50 di sini...", opsi: ["A. Opsi A", "B. Opsi B", "C. Opsi C", "D. Opsi D"], kunci: 0 }
-    ];
+    // Array Tempat Kamu Memasukkan 50 Soal Ekonomi
+    const daftarSoal = [];
 
     let currentIndex = 0;
     let jawabanSiswa = [];
     let raguSiswa = [];
     let namaUser = "", sekolahUser = "";
+    let sisaWaktuDetik = 120 * 60; // 120 Menit
+    let timerInterval = null;
 
     function mulaiUjian() {
       namaUser = document.getElementById("input-nama").value.trim();
       sekolahUser = document.getElementById("input-sekolah").value.trim();
 
-      if (!namaUser) {
-        alert("Silakan masukkan nama Anda terlebih dahulu.");
+      if (!namaUser || !sekolahUser) {
+        alert("Silakan lengkapi nama dan sekolah Anda terlebih dahulu.");
+        return;
+      }
+
+      if (daftarSoal.length === 0) {
+        alert("Daftar soal belum diisi. Silakan masukkan array soal terlebih dahulu!");
         return;
       }
 
@@ -284,43 +346,79 @@
 
       document.getElementById("screen-start").classList.add("hidden");
       document.getElementById("screen-exam").classList.remove("hidden");
-      document.getElementById("screen-sidebar").classList.remove("hidden");
       document.getElementById("timer-box").classList.remove("hidden");
+      document.getElementById("timer-box").classList.add("flex");
 
       renderGridNomor();
       tampilkanSoal(0);
+      jalankanTimer();
+    }
+
+    function jalankanTimer() {
+      timerInterval = setInterval(() => {
+        sisaWaktuDetik--;
+        
+        let m = Math.floor(sisaWaktuDetik / 60);
+        let s = sisaWaktuDetik % 60;
+        
+        let mStr = m < 10 ? "0" + m : m;
+        let sStr = s < 10 ? "0" + s : s;
+
+        document.getElementById("timer-display").innerText = `${mStr}:${sStr}`;
+
+        if (sisaWaktuDetik <= 0) {
+          clearInterval(timerInterval);
+          alert("Waktu pengerjaan telah habis!");
+          selesaikanUjianOtomatis();
+        }
+      }, 1000);
     }
 
     function tampilkanSoal(index) {
       currentIndex = index;
       const data = daftarSoal[index];
       
-      document.getElementById("soal-number").innerText = `Soal Nomor ${index + 1}`;
+      document.getElementById("soal-number").innerText = `Soal #${index + 1}`;
       document.getElementById("soal-kategori").innerText = data.kategori || "Ekonomi";
       document.getElementById("soal-text").innerText = data.soal;
 
       let htmlOpsi = "";
       data.opsi.forEach((opt, optIndex) => {
         const isChecked = jawabanSiswa[index] === optIndex ? "checked" : "";
+        const activeBorder = jawabanSiswa[index] === optIndex ? "border-indigo-600 bg-indigo-50/40" : "border-slate-200/80 bg-white";
+
         htmlOpsi += `
-          <label class="flex items-center gap-3 p-3.5 border rounded-xl hover:bg-indigo-50/50 cursor-pointer transition-all">
-            <input type="radio" name="opsi-soal" value="${optIndex}" ${isChecked} onchange="pilihJawaban(${optIndex})" class="w-4 h-4 text-indigo-600">
-            <span class="text-sm font-medium text-slate-700">${opt}</span>
+          <label class="flex items-center gap-3.5 p-4 border rounded-2xl cursor-pointer hover:border-indigo-300 transition-all ${activeBorder}">
+            <input type="radio" name="opsi-soal" value="${optIndex}" ${isChecked} onchange="pilihJawaban(${optIndex})" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+            <span class="text-xs sm:text-sm font-medium text-slate-700">${opt}</span>
           </label>
         `;
       });
+
       document.getElementById("options-container").innerHTML = htmlOpsi;
+      
+      // Update tampilan tombol ragu
+      const btnRagu = document.getElementById("btn-ragu");
+      if (raguSiswa[index]) {
+        btnRagu.classList.add("bg-amber-400", "text-slate-900");
+        btnRagu.classList.remove("bg-amber-50", "text-amber-700");
+      } else {
+        btnRagu.classList.remove("bg-amber-400", "text-slate-900");
+        btnRagu.classList.add("bg-amber-50", "text-amber-700");
+      }
+
       renderGridNomor();
+      lucide.createIcons();
     }
 
     function pilihJawaban(optIndex) {
       jawabanSiswa[currentIndex] = optIndex;
-      renderGridNomor();
+      tampilkanSoal(currentIndex);
     }
 
     function toggleRagu() {
       raguSiswa[currentIndex] = !raguSiswa[currentIndex];
-      renderGridNomor();
+      tampilkanSoal(currentIndex);
     }
 
     function nextSoal() {
@@ -334,36 +432,67 @@
     function renderGridNomor() {
       let html = "";
       for (let i = 0; i < daftarSoal.length; i++) {
-        let bgClass = "bg-slate-100 text-slate-700 border-slate-300";
-        if (jawabanSiswa[i] !== null) bgClass = "bg-indigo-600 text-white border-indigo-600";
-        if (raguSiswa[i]) bgClass = "bg-amber-400 text-slate-900 border-amber-400 font-bold";
-        if (i === currentIndex) bgClass += " ring-2 ring-offset-2 ring-indigo-500";
+        let styleClass = "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100";
+        
+        if (jawabanSiswa[i] !== null) {
+          styleClass = "bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-100";
+        }
+        if (raguSiswa[i]) {
+          styleClass = "bg-amber-400 text-slate-900 border-amber-400 font-bold shadow-sm shadow-amber-100";
+        }
+        if (i === currentIndex) {
+          styleClass += " ring-2 ring-offset-2 ring-indigo-500 font-bold";
+        }
 
-        html += `<button onclick="tampilkanSoal(${i})" class="h-10 text-sm rounded-lg border font-medium ${bgClass}">${i + 1}</button>`;
+        html += `
+          <button onclick="tampilkanSoal(${i})" class="h-10 text-xs rounded-xl border font-semibold transition-all ${styleClass}">
+            ${i + 1}
+          </button>
+        `;
       }
       document.getElementById("grid-nomor").innerHTML = html;
     }
 
     function konfirmasiSelesai() {
-      if (confirm("Apakah Anda yakin ingin mengakhiri ujian ini?")) {
-        let benar = 0;
-        jawabanSiswa.forEach((jawaban, idx) => {
-          if (jawaban === daftarSoal[idx].kunci) benar++;
-        });
+      let belumDijawab = jawabanSiswa.filter(j => j === null).length;
+      let msg = "Apakah Anda yakin ingin menyelesaikan ujian?";
+      if (belumDijawab > 0) {
+        msg = `Masih ada ${belumDijawab} soal yang belum dijawab. Yakin ingin mengakhiri ujian?`;
+      }
 
-        const totalSkor = Math.round((benar / daftarSoal.length) * 100);
+      if (confirm(msg)) {
+        selesaikanUjianOtomatis();
+      }
+    }
 
-        document.getElementById("screen-exam").classList.add("hidden");
-        document.getElementById("screen-sidebar").classList.add("hidden");
-        document.getElementById("timer-box").classList.add("hidden");
-        document.getElementById("screen-result").classList.remove("hidden");
+    function selesaikanUjianOtomatis() {
+      clearInterval(timerInterval);
 
-        document.getElementById("total-skor").innerText = totalSkor;
-        document.getElementById("detail-jawaban-stat").innerText = `Benar: ${benar} | Salah: ${daftarSoal.length - benar}`;
+      let benar = 0;
+      let salah = 0;
+      let kosong = 0;
 
-        if (typeof window.simpanSkorKeFirebase === "function") {
-          window.simpanSkorKeFirebase(namaUser, sekolahUser, totalSkor);
+      jawabanSiswa.forEach((jawaban, idx) => {
+        if (jawaban === null) {
+          kosong++;
+        } else if (jawaban === daftarSoal[idx].kunci) {
+          benar++;
+        } else {
+          salah++;
         }
+      });
+
+      const totalSkor = Math.round((benar / daftarSoal.length) * 100);
+
+      document.getElementById("screen-exam").classList.add("hidden");
+      document.getElementById("timer-box").classList.add("hidden");
+      document.getElementById("screen-result").classList.remove("hidden");
+
+      document.getElementById("total-skor").innerText = totalSkor;
+      document.getElementById("detail-jawaban-stat").innerText = `Benar: ${benar} | Salah: ${salah} | Kosong: ${kosong}`;
+
+      if (typeof window.simpanSkorKeFirebase === "function") {
+        window.simpanSkorKeFirebase(namaUser, sekolahUser, totalSkor);
       }
     }
   </script>
